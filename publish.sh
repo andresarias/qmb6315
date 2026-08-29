@@ -21,4 +21,4 @@ git commit -m "${1:-Update widgets}"
 git push
 echo
 echo "Pushed. GitHub Pages usually redeploys within a minute:"
-echo "  https://andresarias.github.io/qmb6315/"
+echo "  https://andresarias.com/qmb6315/"
