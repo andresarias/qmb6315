@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confidence Intervals — QMB 6315</title>
+<style>
+  :root{
+    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
+    --rule:#E8DFD2; --pop:#C4703A; --pop-soft:#EFD9C7; --mean:#2F6F6B; --mean-soft:#CFE2E0;
+    --flag:#B8433A; --note:#FBF3E7; --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    -webkit-font-smoothing:antialiased; padding:28px 20px 56px;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:29px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 26px;font-size:16.5px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 3px;font-weight:600;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif}
+  .card .cap{color:var(--muted);font-size:14.5px;margin:0 0 14px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .axis-lbl{font:11.5px ui-sans-serif,-apple-system,"Segoe UI",sans-serif;fill:var(--faint)}
+  .tick{stroke:var(--rule);stroke-width:1}
+
+  /* guided note */
+  .note{background:var(--note);border:1px solid #EFDFC4;border-left:3px solid var(--pop);
+        border-radius:8px;padding:15px 18px;margin-bottom:18px}
+  .note b{display:block;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop);margin-bottom:5px;font-weight:700}
+  .note p{margin:0;font-size:16px}
+
+  /* the caution card */
+  .caution{background:#FDF4F3;border:1px solid #F0D6D3;border-left:3px solid var(--flag)}
+  .caution h2{color:var(--flag)}
+  .caution p{margin:0 0 11px;font-size:15.5px}
+  .caution p:last-child{margin-bottom:0}
+
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .grp{flex:1 1 auto;min-width:200px}
+  .grp>span{display:block;font:600 11.5px/1 ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+        letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .btns{display:flex;flex-wrap:wrap;gap:7px}
+  button{
+    font:15px/1 "Iowan Old Style",Georgia,serif; color:var(--ink); background:#fff;
+    border:1px solid var(--rule); border-radius:7px; padding:9px 14px; cursor:pointer;
+    transition:background .13s,border-color .13s,color .13s;
+  }
+  button:hover{background:#FAF6EF;border-color:#D8CBB8}
+  button:active{background:#F3EBDE}
+  button[aria-pressed="true"]{background:var(--mean);border-color:var(--mean);color:#fff}
+  button.go{background:var(--pop);border-color:var(--pop);color:#fff}
+  button.go:hover{background:#B0632F;border-color:#B0632F}
+  button.ghost{color:var(--muted)}
+  .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14.5px;margin-top:14px;cursor:pointer;user-select:none}
+  .zoom input{width:16px;height:16px;accent-color:var(--flag);cursor:pointer}
+
+  /* readouts */
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  td{padding:8px 0;border-bottom:1px solid var(--rule)}
+  tr:last-child td{border-bottom:0}
+  td.k{color:var(--muted)}
+  td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  td.v.pop{color:var(--pop)} td.v.mean{color:var(--mean)} td.v.flag{color:var(--flag)}
+  .split{display:flex;gap:18px;flex-wrap:wrap}
+  .split>div{flex:1 1 300px}
+  .hint{font-size:13.5px;color:var(--faint);margin:10px 0 0;font-style:italic}
+  .empty{color:var(--faint);font-size:15px;font-style:italic;padding:26px 0;text-align:center}
+
+  /* the single-study readout */
+  .interval{font-size:19px;text-align:center;padding:6px 0 2px;font-variant-numeric:tabular-nums}
+  .interval .lo,.interval .hi{font-weight:600;color:var(--mean)}
+  .verdict{text-align:center;font-size:15px;margin:8px 0 0}
+  .verdict.hit{color:var(--mean)}
+  .verdict.miss{color:var(--flag);font-weight:600}
+  .verdict.blind{color:var(--faint);font-style:italic}
+  .work{color:var(--muted);font-size:14.5px;text-align:center;margin:12px 0 0;font-variant-numeric:tabular-nums}
+
+  .legend{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  footer{color:var(--faint);font-size:13.5px;text-align:center;margin-top:30px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>What does “95% confident” actually mean?</h1>
+  <p class="sub">QMB 6315 · Week 4 · Work through this before the homework. It takes about ten minutes.</p>
+
+  <div class="note" id="note">
+    <b>Start here</b>
+    <p id="noteTxt">A new drug is supposed to lower systolic blood pressure. Below is every patient it would ever help or fail to help — the whole population, 5,000 people. Because this is a simulation, we get to see something no researcher on earth has ever seen: <strong>the true average reduction, <em>μ</em></strong>, marked in orange. Real researchers never know this number. That is the entire reason confidence intervals exist. Now go run a study.</p>
+  </div>
+
+  <!-- POPULATION -->
+  <div class="card">
+    <h2>The truth — which nobody in real life gets to see</h2>
+    <p class="cap">Blood pressure reduction for all 5,000 patients, in mmHg. Some patients improve a lot, some barely, and a few get worse.</p>
+    <svg id="popSvg" viewBox="0 0 860 218" role="img" aria-label="Histogram of blood pressure reduction across the whole patient population, with the true mean marked"></svg>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="ctl">
+      <div class="grp">
+        <span>Patients per study <em style="text-transform:none;letter-spacing:0;font-style:italic">(n)</em></span>
+        <div class="btns" id="nBtns"></div>
+      </div>
+      <div class="grp">
+        <span>Confidence level <em style="text-transform:none;letter-spacing:0;font-style:italic">(CL)</em></span>
+        <div class="btns" id="cBtns"></div>
+      </div>
+      <div class="grp">
+        <span>Run studies</span>
+        <div class="btns">
+          <button class="go" id="r1">Run 1 study</button>
+          <button id="r20">Run 20</button>
+          <button id="r100">Run 100</button>
+          <button class="ghost" id="reset">Start over</button>
+        </div>
+      </div>
+    </div>
+    <label class="zoom"><input type="checkbox" id="blind"> Hide the true value <span style="color:var(--faint)">— see what a real researcher sees</span></label>
+    <p class="hint">Changing <em>n</em> or the confidence level clears your studies, since intervals built different ways can’t be piled together.</p>
+  </div>
+
+  <!-- ONE STUDY -->
+  <div class="card">
+    <h2>Your most recent study</h2>
+    <p class="cap">One trial: recruit <span id="nEcho2">30</span> patients, measure the average reduction, report an interval.</p>
+    <div id="oneEmpty" class="empty">Press “Run 1 study” to recruit <span id="nEcho">30</span> patients.</div>
+    <div id="oneBody" style="display:none">
+      <p class="interval">(<span class="lo" id="ivLo">—</span>, <span class="hi" id="ivHi">—</span>)&nbsp; mmHg</p>
+      <p class="verdict" id="verdict">&nbsp;</p>
+      <p class="work" id="work">&nbsp;</p>
+    </div>
+  </div>
+
+  <!-- ALL STUDIES -->
+  <div class="card">
+    <h2>Every study you have run</h2>
+    <p class="cap" id="stackCap">One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. The vertical orange line is the truth, and it never moves.</p>
+    <svg id="ciSvg" viewBox="0 0 860 120" role="img" aria-label="Stacked confidence intervals from every simulated study"></svg>
+    <div class="legend" id="legend">
+      <span><i style="background:var(--mean)"></i>Interval contains <em>μ</em></span>
+      <span><i style="background:var(--flag)"></i>Interval misses <em>μ</em></span>
+      <span><i style="background:var(--pop)"></i>The true <em>μ</em></span>
+    </div>
+    <p class="hint" id="showing">&nbsp;</p>
+  </div>
+
+  <!-- NUMBERS -->
+  <div class="card">
+    <h2>The numbers</h2>
+    <div class="split">
+      <div>
+        <table>
+          <tr><td class="k">True population mean, <em>μ</em></td><td class="v pop" id="mu">—</td></tr>
+          <tr><td class="k">Population standard deviation, <em>σ</em></td><td class="v pop" id="sig">—</td></tr>
+          <tr><td class="k">Patients per study, <em>n</em></td><td class="v" id="nOut">30</td></tr>
+          <tr><td class="k">Confidence level, <em>CL</em></td><td class="v" id="clOut">95%</td></tr>
+        </table>
+      </div>
+      <div>
+        <table>
+          <tr><td class="k">Studies run</td><td class="v" id="cnt">0</td></tr>
+          <tr><td class="k">Intervals that captured <em>μ</em></td><td class="v mean" id="hits">—</td></tr>
+          <tr><td class="k">Intervals that missed</td><td class="v flag" id="miss">—</td></tr>
+          <tr><td class="k"><strong>Your capture rate</strong></td><td class="v" id="rate">—</td></tr>
+          <tr><td class="k">Average interval width</td><td class="v" id="wid">—</td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="hint">Compare your capture rate to the confidence level you chose. They should be closing in on each other — that is what the confidence level is a promise about.</p>
+  </div>
+
+  <!-- THE MISREADING -->
+  <div class="card caution">
+    <h2>What it does <em>not</em> mean</h2>
+    <p>Almost everyone, including people who publish research, reads a 95% confidence interval as <em>“there is a 95% chance the true value is inside my interval.”</em> That is not what it says.</p>
+    <p>Once your study is finished, your interval either contains <em>μ</em> or it does not. There is no chance left in it. Look at the red lines above: from the inside, nothing about those studies looks wrong. The researchers did everything correctly. They were unlucky, and they will never find out.</p>
+    <p><strong>The 95% describes the method, not your answer.</strong> It says that a procedure like this one, repeated over and over, produces intervals that capture the truth about 95% of the time. Which of your studies is one of the good ones is a question the interval cannot answer.</p>
+  </div>
+
+  <footer>
+    Scenario modeled on a blood-pressure drug trial.<br>
+    Notation follows OpenStax <em>Introductory Statistics 2e</em>, §8.1–8.2. Intervals use the Student’s <em>t</em> form, <em>EBM&nbsp;=&nbsp;t</em><sub>α/2</sub>&#8202;·&#8202;<em>s&#8202;/&#8202;√n</em>, because σ is unknown to the researcher.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- deterministic RNG so every student sees the same population ---------- */
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  var seeded = mulberry32(20261107);
+  function gauss(rnd){
+    var u=0,v=0;
+    while(u===0) u=rnd();
+    while(v===0) v=rnd();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  /* ---------- the population of patients ---------- */
+  var N=5000;
+  var POP=new Float64Array(N);
+  for(var i=0;i<N;i++) POP[i] = 8.4 + gauss(seeded)*12.0;
+  var MU=0; for(i=0;i<N;i++) MU+=POP[i]; MU/=N;
+  var SS=0; for(i=0;i<N;i++){ var d=POP[i]-MU; SS+=d*d; }
+  var SIGMA=Math.sqrt(SS/N);
+  var PLO=-40, PHI=56;   // fixed display range for the population histogram
+
+  /* ---------- Student's t: cdf by incomplete beta, critical value by bisection ---------- */
+  function lgamma(x){
+    var g=7, c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,
+      771.32342877765313,-176.61502916214059,12.507343278686905,
+      -0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+    if(x<0.5) return Math.log(Math.PI/Math.sin(Math.PI*x))-lgamma(1-x);
+    x-=1; var a=c[0], t=x+g+0.5;
+    for(var i=1;i<g+2;i++) a+=c[i]/(x+i);
+    return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);
+  }
+  function betacf(a,b,x){
+    var MAXIT=250, EPS=3e-14, FPMIN=1e-300;
+    var qab=a+b, qap=a+1, qam=a-1;
+    var c=1, d=1-qab*x/qap;
+    if(Math.abs(d)<FPMIN) d=FPMIN;
+    d=1/d; var h=d;
+    for(var m=1;m<=MAXIT;m++){
+      var m2=2*m, aa, del;
+      aa=m*(b-m)*x/((qam+m2)*(a+m2));
+      d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+      c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+      d=1/d; h*=d*c;
+      aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+      d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+      c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+      d=1/d; del=d*c; h*=del;
+      if(Math.abs(del-1)<EPS) break;
+    }
+    return h;
+  }
+  function betai(a,b,x){
+    if(x<=0) return 0;
+    if(x>=1) return 1;
+    var bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+    if(x < (a+1)/(a+b+2)) return bt*betacf(a,b,x)/a;
+    return 1-bt*betacf(b,a,1-x)/b;
+  }
+  function tcdf(t,v){
+    var p=0.5*betai(v/2,0.5,v/(v+t*t));
+    return t>0 ? 1-p : p;
+  }
+  function tcrit(v,cl){
+    var target=1-(1-cl)/2, lo=0, hi=60;
+    for(var i=0;i<100;i++){ var mid=(lo+hi)/2; if(tcdf(mid,v)<target) lo=mid; else hi=mid; }
+    return (lo+hi)/2;
+  }
+
+  /* ---------- state ---------- */
+  var n=30, CL=0.95, studies=[], blind=false, step=0, TC=tcrit(29,0.95);
+  var SIZES=[10,30,100,400], LEVELS=[0.90,0.95,0.99];
+  var MAXROWS=100;
+
+  /* ---------- helpers ---------- */
+  var NS="http://www.w3.org/2000/svg";
+  function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function num(x){ return (Math.round(x*10)/10).toFixed(1); }
+  function mm(x){ return num(x)+" mmHg"; }
+  function pct(x){ return (Math.round(x*10)/10).toFixed(1)+"%"; }
+
+  /* half-width of the interval-plot axis: wide enough for the x̄ scatter plus a full EBM.
+     The t term is inflated because s itself varies, and it varies most at small n —
+     without this, roughly one interval in 200 runs off the edge of the chart at n = 10. */
+  function halfSpan(){
+    var inflate = 1 + 2.4/Math.sqrt(2*(n-1));
+    return (TC*inflate + 3.3) * (SIGMA/Math.sqrt(n));
+  }
+
+  function bin(vals,lo,hi,k){
+    var c=new Array(k).fill(0), w=(hi-lo)/k;
+    for(var i=0;i<vals.length;i++){
+      var b=Math.floor((vals[i]-lo)/w);
+      if(b<0) b=0; else if(b>=k) b=k-1;
+      c[b]++;
+    }
+    return {c:c,w:w};
+  }
+  /* the axis range shifts with n and CL, so ticks are placed on round numbers
+     rather than at fixed fractions of the span */
+  function niceStep(span,target){
+    var raw=span/target, mag=Math.pow(10,Math.floor(Math.log10(raw))), norm=raw/mag;
+    return (norm<1.5?1 : norm<3?2 : norm<7?5 : 10)*mag;
+  }
+  function axis(svg,lo,hi,W,H,PL,PR){
+    var span=hi-lo, st=niceStep(span,6), dp=Math.max(0,-Math.floor(Math.log10(st)+1e-9));
+    var first=Math.ceil(lo/st)*st;
+    for(var i=0;;i++){
+      var val=first+i*st;
+      if(val>hi+1e-9) break;
+      var x=PL+(W-PL-PR)*((val-lo)/span);
+      svg.appendChild(el("line",{x1:x,y1:H,x2:x,y2:H+5,class:"tick"}));
+      var tx=el("text",{x:x,y:H+18,"text-anchor":"middle",class:"axis-lbl"});
+      var s=val.toFixed(dp);
+      if(/^-0(\.0+)?$/.test(s)) s=s.slice(1);   // no "-0"
+      tx.textContent=s;
+      svg.appendChild(tx);
+    }
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+    var u=el("text",{x:(PL+W-PR)/2,y:H+35,"text-anchor":"middle",class:"axis-lbl"});
+    u.textContent="reduction in systolic blood pressure (mmHg)";
+    svg.appendChild(u);
+  }
+
+  /* ---------- population chart ---------- */
+  function renderPop(){
+    var svg=document.getElementById("popSvg");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var W=860,H=170,PL=8,PR=8,K=56, span=W-PL-PR;
+    function X(v){ return PL+((v-PLO)/(PHI-PLO))*span; }
+    var b=bin(Array.from(POP),PLO,PHI,K), max=Math.max.apply(null,b.c)||1;
+    var bw=span/K;
+    for(var i=0;i<K;i++){
+      if(!b.c[i]) continue;
+      var h=Math.max(1.5,(b.c[i]/max)*(H-26));
+      svg.appendChild(el("rect",{x:PL+i*bw+.6,y:H-h,width:Math.max(.8,bw-1.2),height:h,fill:"var(--pop)",rx:1.5,opacity:.55}));
+    }
+    // "no change" marker
+    svg.appendChild(el("line",{x1:X(0),y1:26,x2:X(0),y2:H,stroke:"#C9BEAF","stroke-width":1,"stroke-dasharray":"3 3"}));
+    var z=el("text",{x:X(0),y:20,"text-anchor":"middle",class:"axis-lbl"});
+    z.textContent="no change";
+    svg.appendChild(z);
+    // the truth
+    if(!blind){
+      svg.appendChild(el("line",{x1:X(MU),y1:16,x2:X(MU),y2:H,stroke:"var(--pop)","stroke-width":2.5}));
+      var t=el("text",{x:X(MU)+7,y:22,class:"axis-lbl",fill:"var(--pop)","font-weight":"700","font-size":"13"});
+      t.textContent="μ = "+mm(MU);
+      svg.appendChild(t);
+    }
+    axis(svg,PLO,PHI,W,H,PL,PR);
+  }
+
+  /* ---------- one study ---------- */
+  function runOnce(){
+    var s=new Array(n), i;
+    for(i=0;i<n;i++) s[i]=POP[(Math.random()*N)|0];
+    var m=0; for(i=0;i<n;i++) m+=s[i]; m/=n;
+    var ss=0; for(i=0;i<n;i++){ var d=s[i]-m; ss+=d*d; }
+    var sd=Math.sqrt(ss/(n-1));               // sample standard deviation, s
+    var ebm=TC*sd/Math.sqrt(n);               // EBM = t · s/√n
+    var st={m:m,s:sd,ebm:ebm,lo:m-ebm,hi:m+ebm};
+    st.hit = (st.lo<=MU && MU<=st.hi);
+    studies.push(st);
+    return st;
+  }
+
+  function renderOne(){
+    var empty=document.getElementById("oneEmpty"), body=document.getElementById("oneBody");
+    if(!studies.length){ empty.style.display="block"; body.style.display="none"; return; }
+    empty.style.display="none"; body.style.display="block";
+    var st=studies[studies.length-1];
+    document.getElementById("ivLo").textContent=num(st.lo);
+    document.getElementById("ivHi").textContent=num(st.hi);
+    var v=document.getElementById("verdict"),
+        ends=[document.getElementById("ivLo"),document.getElementById("ivHi")];
+    ends[0].style.color = ends[1].style.color = blind ? "var(--ink)" : "";
+    if(blind){
+      v.className="verdict blind";
+      v.textContent="Did this interval capture μ? You have no way of knowing — and neither does a real researcher.";
+    }else if(st.hit){
+      v.className="verdict hit";
+      v.textContent="This interval contains μ. A good study.";
+    }else{
+      v.className="verdict miss";
+      v.textContent="This interval misses μ entirely — and nothing about the study went wrong.";
+    }
+    document.getElementById("work").innerHTML =
+      "x̄ = "+num(st.m)+" &nbsp;·&nbsp; s = "+num(st.s)+" &nbsp;·&nbsp; t = "+num(TC)+
+      " &nbsp;·&nbsp; EBM = t&#8202;·&#8202;s&#8202;/&#8202;√n = <strong>"+num(st.ebm)+"</strong>";
+  }
+
+  /* ---------- the stack of intervals ---------- */
+  function renderCI(){
+    document.getElementById("stackCap").innerHTML = blind
+      ? "One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. <strong>The truth is no longer shown</strong>, so there is no way to tell which of these studies got it right."
+      : "One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. The vertical orange line is the truth, and it never moves.";
+    var svg=document.getElementById("ciSvg");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var W=860,PL=8,PR=8, span=W-PL-PR;
+    var half=halfSpan(), lo=MU-half, hi=MU+half;
+    function X(v){ return Math.max(PL,Math.min(W-PR, PL+((v-lo)/(hi-lo))*span)); }
+
+    var shown = studies.length>MAXROWS ? studies.slice(studies.length-MAXROWS) : studies;
+    var rows = shown.length;
+    var rowH = rows ? Math.max(5, Math.min(16, 620/rows)) : 0;
+    var top = 24, H = rows ? top+rows*rowH+6 : 104;
+    svg.setAttribute("viewBox","0 0 "+W+" "+(H+42));
+
+    // the truth line — full height of whatever plot we are about to draw
+    if(!blind){
+      svg.appendChild(el("line",{x1:X(MU),y1:14,x2:X(MU),y2:H,stroke:"var(--pop)","stroke-width":2.5}));
+      var t=el("text",{x:X(MU),y:10,"text-anchor":"middle",class:"axis-lbl",fill:"var(--pop)","font-weight":"700","font-size":"12.5"});
+      t.textContent="μ";
+      svg.appendChild(t);
+    }
+
+    if(!rows){
+      var e=el("text",{x:W/2,y:64,"text-anchor":"middle",class:"axis-lbl","font-size":"14"});
+      e.textContent="No studies yet.";
+      svg.appendChild(e);
+      axis(svg,lo,hi,W,H,PL,PR);
+      return;
+    }
+
+    for(var i=0;i<rows;i++){
+      var st=shown[i], y=top+i*rowH+rowH/2;
+      var col = blind ? "#8C8378" : (st.hit ? "var(--mean)" : "var(--flag)");
+      var lw  = (!blind && !st.hit) ? 2.6 : 2;
+      svg.appendChild(el("line",{x1:X(st.lo),y1:y,x2:X(st.hi),y2:y,stroke:col,"stroke-width":lw,opacity:.9,"stroke-linecap":"round"}));
+      if(rowH>=8){
+        var cap=Math.min(3,rowH/3);
+        svg.appendChild(el("line",{x1:X(st.lo),y1:y-cap,x2:X(st.lo),y2:y+cap,stroke:col,"stroke-width":1.4,opacity:.9}));
+        svg.appendChild(el("line",{x1:X(st.hi),y1:y-cap,x2:X(st.hi),y2:y+cap,stroke:col,"stroke-width":1.4,opacity:.9}));
+      }
+      svg.appendChild(el("circle",{cx:X(st.m),cy:y,r:Math.min(2.6,rowH/3.4),fill:col}));
+    }
+
+    axis(svg,lo,hi,W,H,PL,PR);
+
+    document.getElementById("showing").textContent =
+      studies.length>MAXROWS
+        ? "Showing your most recent "+MAXROWS+" studies of "+studies.length+". The counts below use all of them."
+        : " ";
+  }
+
+  /* ---------- numbers ---------- */
+  function renderNums(){
+    document.getElementById("mu").textContent  = blind ? "hidden" : mm(MU);
+    document.getElementById("sig").textContent = blind ? "hidden" : mm(SIGMA);
+    document.getElementById("nOut").textContent = n;
+    document.getElementById("nEcho").textContent = n;
+    document.getElementById("nEcho2").textContent = n;
+    document.getElementById("clOut").textContent = Math.round(CL*100)+"%";
+    document.getElementById("cnt").textContent = studies.length;
+
+    var hits=0,w=0;
+    for(var i=0;i<studies.length;i++){ if(studies[i].hit) hits++; w+=2*studies[i].ebm; }
+    document.getElementById("wid").textContent = studies.length ? mm(w/studies.length) : "—";
+    if(blind || !studies.length){
+      document.getElementById("hits").textContent="—";
+      document.getElementById("miss").textContent="—";
+      document.getElementById("rate").textContent="—";
+      return;
+    }
+    document.getElementById("hits").textContent=hits;
+    document.getElementById("miss").textContent=studies.length-hits;
+    document.getElementById("rate").textContent=pct(100*hits/studies.length);
+  }
+
+  /* ---------- guided narration ---------- */
+  var STEPS=[
+    ["Start here","A new drug is supposed to lower systolic blood pressure. Below is every patient it would ever help or fail to help — the whole population, 5,000 people. Because this is a simulation, we get to see something no researcher on earth has ever seen: <strong>the true average reduction, <em>μ</em></strong>, marked in orange. Real researchers never know this number. That is the entire reason confidence intervals exist. Now go run a study."],
+    ["You just ran a trial","You recruited <span id='nz'></span> patients, measured their average reduction (<em>x̄</em>), and reported an interval around it. That interval is your honest answer to “how much does this drug lower blood pressure?” — a range, not a single number, because you only saw <span id='nz2'></span> people out of 5,000. Notice where your interval sits relative to the orange line. Run a few more trials."],
+    ["The truth is not the thing that moves","Every trial recruits different patients, so every trial gets a different <em>x̄</em> and a different interval. Watch the stack build. <strong>The orange line has not moved once.</strong> <em>μ</em> is a fixed fact about the drug; your interval is the thing that wobbles. Almost everyone has this backwards. Now press <em>Run 100</em>."],
+    ["Count the red ones","Roughly one interval in twenty is red — it does not reach the truth. Those studies were run correctly. The patients were sampled properly, the arithmetic was right, and the answer is still wrong. That is not a flaw in the method; <strong>it is the price printed on the label.</strong> “95% confidence” is the promise that this happens about 5% of the time. Check your capture rate against your confidence level in the numbers panel."],
+    ["Three things to try","<strong>One.</strong> Drop to 90% confidence and run 100 again. More red. Now go to 99%. Almost no red — but look at how wide the intervals became. Certainty is bought with vagueness, and there is no way around it.<br><br><strong>Two.</strong> Set <em>n</em> to 10, then 400. The interval width is roughly <em>t&#8202;·&#8202;s&#8202;/&#8202;√n</em>, so quadrupling the patients only halves the width. That is why trials cost what they cost.<br><br><strong>Three.</strong> Tick <strong>Hide the true value</strong>. The colors go grey and the capture rate disappears, because without <em>μ</em> nobody can compute it. That grey stack is the real world. Every published trial is one of those lines, and no one knows which."]
+  ];
+  function narrate(k){
+    if(k<step) return;
+    step=k;
+    document.getElementById("note").querySelector("b").textContent=STEPS[k][0];
+    document.getElementById("noteTxt").innerHTML=STEPS[k][1];
+    var a=document.getElementById("nz"); if(a) a.textContent=n;
+    var b=document.getElementById("nz2"); if(b) b.textContent=n;
+  }
+
+  /* ---------- actions ---------- */
+  function runMany(k){
+    for(var i=0;i<k;i++) runOnce();
+    renderOne(); renderCI(); renderNums();
+    if(studies.length>=100) narrate(4);
+    else if(studies.length>=40) narrate(3);
+    else if(studies.length>=4) narrate(2);
+    else narrate(1);
+  }
+  function clear(){
+    studies=[];
+    renderOne(); renderCI(); renderNums();
+    document.getElementById("showing").textContent=" ";
+  }
+
+  /* ---------- wiring ---------- */
+  var nBox=document.getElementById("nBtns");
+  SIZES.forEach(function(v){
+    var b=document.createElement("button");
+    b.textContent=v; b.setAttribute("aria-pressed", v===n?"true":"false");
+    b.addEventListener("click",function(){
+      n=v; TC=tcrit(n-1,CL); clear();
+      Array.prototype.forEach.call(nBox.children,function(c){
+        c.setAttribute("aria-pressed",(+c.textContent)===n?"true":"false");
+      });
+      if(step>=3) narrate(4);
+    });
+    nBox.appendChild(b);
+  });
+  var cBox=document.getElementById("cBtns");
+  LEVELS.forEach(function(v){
+    var b=document.createElement("button");
+    b.textContent=Math.round(v*100)+"%";
+    b.setAttribute("aria-pressed", v===CL?"true":"false");
+    b.addEventListener("click",function(){
+      CL=v; TC=tcrit(n-1,CL); clear();
+      Array.prototype.forEach.call(cBox.children,function(c){
+        c.setAttribute("aria-pressed", (parseInt(c.textContent,10)/100)===CL?"true":"false");
+      });
+      if(step>=3) narrate(4);
+    });
+    cBox.appendChild(b);
+  });
+  document.getElementById("r1").addEventListener("click",function(){runMany(1)});
+  document.getElementById("r20").addEventListener("click",function(){runMany(20)});
+  document.getElementById("r100").addEventListener("click",function(){runMany(100)});
+  document.getElementById("reset").addEventListener("click",clear);
+  document.getElementById("blind").addEventListener("change",function(e){
+    blind=e.target.checked;
+    document.getElementById("legend").style.display = blind ? "none" : "flex";
+    renderPop(); renderOne(); renderCI(); renderNums();
+  });
+
+  renderPop(); renderOne(); renderCI(); renderNums();
+})();
+</script>
+</body>
+</html>

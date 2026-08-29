@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QMB 6315 — Interactive Statistics</title>
+<style>
+  :root{
+    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
+    --rule:#E8DFD2; --pop:#C4703A; --mean:#2F6F6B;
+    --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    -webkit-font-smoothing:antialiased; padding:44px 20px 64px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 32px;font-size:16.5px}
+  a.item{
+    display:block;text-decoration:none;color:inherit;
+    background:var(--card);border:1px solid var(--rule);border-radius:10px;
+    padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow);
+    transition:border-color .14s, transform .14s;
+  }
+  a.item:hover{border-color:#D3BFA6;transform:translateY(-1px)}
+  .wk{font:600 11.5px/1 ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+      letter-spacing:.11em;text-transform:uppercase;color:var(--pop);margin-bottom:7px}
+  .ttl{font-size:20px;font-weight:600;margin-bottom:5px}
+  .desc{color:var(--muted);font-size:15.5px}
+  footer{color:var(--faint);font-size:13.5px;margin-top:34px;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>QMB 6315 — Interactive Statistics</h1>
+  <p class="sub">Business Analysis for Decision Making · FIU · Fall 2026<br>
+     Work through each one before that week’s homework. Nothing to install, nothing to submit.</p>
+
+  <a class="item" href="z-score-explorer.html">
+    <div class="wk">Week 2</div>
+    <div class="ttl">How unusual is one number?</div>
+    <div class="desc">The normal distribution, z-scores, and the one question people forget to ask: is this data actually shaped like a bell?</div>
+  </a>
+
+  <a class="item" href="clt-sandbox.html">
+    <div class="wk">Week 3</div>
+    <div class="ttl">Where do sample means come from?</div>
+    <div class="desc">Draw samples from a lopsided population and watch their averages assemble themselves into a bell curve. The central limit theorem, done by hand.</div>
+  </a>
+
+  <a class="item" href="ci-simulator.html">
+    <div class="wk">Week 4</div>
+    <div class="ttl">What does “95% confident” actually mean?</div>
+    <div class="desc">Run a hundred clinical trials. Watch about five of them miss the truth entirely, through no fault of their own.</div>
+  </a>
+
+  <footer>
+    All three follow OpenStax <em>Introductory Statistics 2e</em>.<br>
+    Best on a laptop. They work on a phone, but you will scroll.
+  </footer>
+</div>
+</body>
+</html>

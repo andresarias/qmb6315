@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Central Limit Theorem — QMB 6315</title>
+<style>
+  :root{
+    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
+    --rule:#E8DFD2; --pop:#C4703A; --pop-soft:#EFD9C7; --mean:#2F6F6B; --mean-soft:#CFE2E0;
+    --flag:#B8433A; --note:#FBF3E7; --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    -webkit-font-smoothing:antialiased; padding:28px 20px 56px;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:29px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 26px;font-size:16.5px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 3px;font-weight:600;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif}
+  .card .cap{color:var(--muted);font-size:14.5px;margin:0 0 14px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .axis-lbl{font:11.5px ui-sans-serif,-apple-system,"Segoe UI",sans-serif;fill:var(--faint)}
+  .tick{stroke:var(--rule);stroke-width:1}
+
+  /* guided note */
+  .note{background:var(--note);border:1px solid #EFDFC4;border-left:3px solid var(--pop);
+        border-radius:8px;padding:15px 18px;margin-bottom:18px}
+  .note b{display:block;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop);margin-bottom:5px;font-weight:700}
+  .note p{margin:0;font-size:16px}
+
+  /* controls */
+  .ctl{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .grp{flex:1 1 auto;min-width:220px}
+  .grp>span{display:block;font:600 11.5px/1 ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+        letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .btns{display:flex;flex-wrap:wrap;gap:7px}
+  button{
+    font:15px/1 "Iowan Old Style",Georgia,serif; color:var(--ink); background:#fff;
+    border:1px solid var(--rule); border-radius:7px; padding:9px 14px; cursor:pointer;
+    transition:background .13s,border-color .13s,color .13s;
+  }
+  button:hover{background:#FAF6EF;border-color:#D8CBB8}
+  button:active{background:#F3EBDE}
+  button[aria-pressed="true"]{background:var(--mean);border-color:var(--mean);color:#fff}
+  button.go{background:var(--pop);border-color:var(--pop);color:#fff}
+  button.go:hover{background:#B0632F;border-color:#B0632F}
+  button.ghost{color:var(--muted)}
+  .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14.5px;margin-top:12px;cursor:pointer;user-select:none}
+  .zoom input{width:16px;height:16px;accent-color:var(--mean);cursor:pointer}
+
+  /* readouts */
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  td{padding:8px 0;border-bottom:1px solid var(--rule)}
+  tr:last-child td{border-bottom:0}
+  td.k{color:var(--muted)}
+  td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  td.v.pop{color:var(--pop)} td.v.mean{color:var(--mean)}
+  .split{display:flex;gap:18px;flex-wrap:wrap}
+  .split>div{flex:1 1 300px}
+  .hint{font-size:13.5px;color:var(--faint);margin:10px 0 0;font-style:italic}
+  .empty{color:var(--faint);font-size:15px;font-style:italic;padding:26px 0;text-align:center}
+  footer{color:var(--faint);font-size:13.5px;text-align:center;margin-top:30px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Where do sample means come from?</h1>
+  <p class="sub">QMB 6315 · Week 3 · Work through this before Task&nbsp;1. It takes about ten minutes.</p>
+
+  <div class="note" id="note">
+    <b>Start here</b>
+    <p id="noteTxt">Below is our whole population — the medical charges billed to 5,000 people over one year. Look at its shape for a moment before you touch anything. It is lopsided: most people cost very little, and a long tail of people cost a great deal. <strong>It is nothing like a bell curve.</strong> Remember that, because it is the entire point of what follows.</p>
+  </div>
+
+  <!-- POPULATION -->
+  <div class="card">
+    <h2>The population</h2>
+    <p class="cap">All 5,000 people. Every bar is a range of dollar amounts; taller means more people.</p>
+    <svg id="popSvg" viewBox="0 0 860 210" role="img" aria-label="Histogram of medical charges for the whole population, strongly right-skewed"></svg>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="ctl">
+      <div class="grp">
+        <span>How many people in each sample <em style="text-transform:none;letter-spacing:0;font-style:italic">(n)</em></span>
+        <div class="btns" id="nBtns"></div>
+      </div>
+      <div class="grp">
+        <span>Take samples</span>
+        <div class="btns">
+          <button class="go" id="d1">Draw 1 sample</button>
+          <button id="d25">Draw 25</button>
+          <button id="d500">Draw 500</button>
+          <button class="ghost" id="reset">Start over</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Changing <em>n</em> clears your results, because sample means can only be compared when they come from samples of the same size.</p>
+  </div>
+
+  <!-- ONE SAMPLE -->
+  <div class="card">
+    <h2>Your most recent sample</h2>
+    <p class="cap">Each dot is one person you happened to pick. The vertical line is their average.</p>
+    <svg id="sampSvg" viewBox="0 0 860 128" role="img" aria-label="The individual values in the most recent sample, with their mean marked"></svg>
+    <div id="sampEmpty" class="empty">Press “Draw 1 sample” to pick <span id="nEcho">30</span> people at random.</div>
+  </div>
+
+  <!-- SAMPLING DISTRIBUTION -->
+  <div class="card">
+    <h2>Every sample mean you have collected</h2>
+    <p class="cap">One bar-worth of height for each average you have produced. This is the <strong>sampling distribution of the mean</strong>.</p>
+    <svg id="sdSvg" viewBox="0 0 860 210" role="img" aria-label="Histogram of the collected sample means"></svg>
+    <label class="zoom"><input type="checkbox" id="zoom"> Zoom in on the sample means <span style="color:var(--faint)">— once they bunch up, zoom in to see their shape</span></label>
+  </div>
+
+  <!-- NUMBERS -->
+  <div class="card">
+    <h2>The numbers</h2>
+    <div class="split">
+      <div>
+        <table>
+          <tr><td class="k">Population mean, <em>μ</em></td><td class="v pop" id="mu">—</td></tr>
+          <tr><td class="k">Population standard deviation, <em>σ</em></td><td class="v pop" id="sig">—</td></tr>
+          <tr><td class="k">Sample size, <em>n</em></td><td class="v" id="nOut">30</td></tr>
+        </table>
+      </div>
+      <div>
+        <table>
+          <tr><td class="k">Sample means collected</td><td class="v mean" id="cnt">0</td></tr>
+          <tr><td class="k">Average of your sample means</td><td class="v mean" id="mom">—</td></tr>
+          <tr><td class="k">Spread of your sample means</td><td class="v mean" id="obsSe">—</td></tr>
+          <tr><td class="k"><strong>Predicted</strong> standard error, <em>σ&#8202;/&#8202;√n</em></td><td class="v" id="predSe">—</td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="hint">The last two rows are the ones to watch. One is measured from what you did; the other was predicted before you started.</p>
+  </div>
+
+  <footer>
+    Population modeled on U.S. medical insurance charges.<br>
+    Notation follows OpenStax <em>Introductory Statistics 2e</em>, §7.1 and §7.3.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- deterministic RNG so every student sees the same population ---------- */
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  var seeded = mulberry32(20261017);
+  function gauss(rnd){
+    var u=0,v=0;
+    while(u===0) u=rnd();
+    while(v===0) v=rnd();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  /* ---------- build the population: a skewed, lumpy mixture ---------- */
+  var LO=0, HI=65000, N=5000;
+  var POP=new Float64Array(N);
+  for(var i=0;i<N;i++){
+    var v;
+    if(seeded()<0.205){                       // heavy-cost group
+      v = 32050 + gauss(seeded)*11000;
+    }else{                                    // everyone else, lognormal
+      v = Math.exp(8.902 + gauss(seeded)*0.525);
+    }
+    POP[i] = Math.min(63800, Math.max(1150, v));
+  }
+  var MU=0; for(i=0;i<N;i++) MU+=POP[i]; MU/=N;
+  var SS=0; for(i=0;i<N;i++){ var d=POP[i]-MU; SS+=d*d; }
+  var SIGMA=Math.sqrt(SS/N);
+
+  /* ---------- state ---------- */
+  var n=30, means=[], lastSample=null, zoomed=false, step=0;
+  var SIZES=[2,5,10,30,100];
+
+  /* ---------- helpers ---------- */
+  var NS="http://www.w3.org/2000/svg";
+  function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function money(x){
+    if(x>=10000) return "$"+Math.round(x).toLocaleString("en-US");
+    return "$"+(Math.round(x*10)/10).toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
+  }
+  function bin(vals,lo,hi,k){
+    var c=new Array(k).fill(0), w=(hi-lo)/k;
+    for(var i=0;i<vals.length;i++){
+      var b=Math.floor((vals[i]-lo)/w);
+      if(b>=0&&b<k) c[b]++; else if(vals[i]>=hi) c[k-1]++;
+    }
+    return {c:c,w:w,lo:lo,hi:hi};
+  }
+  function axis(svg,lo,hi,W,H,PL,PR){
+    var ticks=5;
+    for(var i=0;i<=ticks;i++){
+      var val=lo+(hi-lo)*i/ticks, x=PL+(W-PL-PR)*i/ticks;
+      svg.appendChild(el("line",{x1:x,y1:H,x2:x,y2:H+5,class:"tick"}));
+      var tx=el("text",{x:x,y:H+18,"text-anchor":"middle",class:"axis-lbl"});
+      tx.textContent = val>=1000 ? "$"+Math.round(val/1000)+"k" : "$"+Math.round(val);
+      svg.appendChild(tx);
+    }
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+  }
+  function draw(svgId,vals,lo,hi,k,color,soft,overlay){
+    var svg=document.getElementById(svgId);
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var W=860,H=175,PL=8,PR=8;
+    if(!vals.length){ axis(svg,lo,hi,W,H,PL,PR); return; }
+    var b=bin(vals,lo,hi,k), max=Math.max.apply(null,b.c)||1;
+    var bw=(W-PL-PR)/k;
+    for(var i=0;i<k;i++){
+      if(!b.c[i]) continue;
+      var h=Math.max(1.5,(b.c[i]/max)*(H-14));
+      svg.appendChild(el("rect",{x:PL+i*bw+.6,y:H-h,width:Math.max(.8,bw-1.2),height:h,fill:color,rx:1.5,opacity:.88}));
+    }
+    if(overlay){
+      var se=SIGMA/Math.sqrt(n), pts=[], steps=140;
+      var peak=(1/(se*Math.sqrt(2*Math.PI)));
+      for(var s=0;s<=steps;s++){
+        var xv=lo+(hi-lo)*s/steps;
+        var dz=(xv-MU)/se;
+        var dens=(1/(se*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*dz*dz);
+        var px=PL+(W-PL-PR)*s/steps;
+        var py=H-(dens/peak)*(H-14);
+        pts.push(px.toFixed(1)+","+py.toFixed(1));
+      }
+      svg.appendChild(el("polyline",{points:pts.join(" "),fill:"none",stroke:"#1F4F4C","stroke-width":2,"stroke-linejoin":"round",opacity:.75,"stroke-dasharray":"5 4"}));
+    }
+    axis(svg,lo,hi,W,H,PL,PR);
+  }
+
+  /* ---------- render ---------- */
+  function renderPop(){ draw("popSvg",Array.from(POP),LO,HI,52,"var(--pop)"); }
+
+  function renderSample(){
+    var svg=document.getElementById("sampSvg"), box=document.getElementById("sampEmpty");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    if(!lastSample){ box.style.display="block"; svg.style.display="none"; return; }
+    box.style.display="none"; svg.style.display="block";
+    var W=860,H=96,PL=8,PR=8, span=W-PL-PR;
+    function X(v){ return PL+((v-LO)/(HI-LO))*span; }
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+    // jitter dots so overlaps stay visible
+    var jr=mulberry32(lastSample.length*7919+Math.round(lastSample[0]));
+    for(var i=0;i<lastSample.length;i++){
+      svg.appendChild(el("circle",{cx:X(lastSample[i]),cy:H-10-jr()*54,r:3.6,fill:"var(--pop)",opacity:.62}));
+    }
+    var m=0; for(i=0;i<lastSample.length;i++) m+=lastSample[i]; m/=lastSample.length;
+    svg.appendChild(el("line",{x1:X(m),y1:20,x2:X(m),y2:H,stroke:"var(--mean)","stroke-width":2.5}));
+    var lx=Math.min(W-PR-46,Math.max(PL+46,X(m)));
+    var t=el("text",{x:lx,y:13,"text-anchor":"middle",class:"axis-lbl",fill:"var(--mean)","font-weight":"700","font-size":"13"});
+    t.textContent="x̄ = "+money(m);
+    svg.appendChild(t);
+    var ticks=5;
+    for(i=0;i<=ticks;i++){
+      var val=LO+(HI-LO)*i/ticks, x=PL+span*i/ticks;
+      var tx=el("text",{x:x,y:H+18,"text-anchor":"middle",class:"axis-lbl"});
+      tx.textContent="$"+Math.round(val/1000)+"k";
+      svg.appendChild(tx);
+    }
+  }
+
+  function renderSD(){
+    if(!means.length){ draw("sdSvg",[],LO,HI,52,"var(--mean)"); return; }
+    if(zoomed){
+      var se=SIGMA/Math.sqrt(n);
+      draw("sdSvg",means,Math.max(0,MU-4*se),MU+4*se,40,"var(--mean)",null,means.length>=30);
+    }else{
+      draw("sdSvg",means,LO,HI,52,"var(--mean)",null,means.length>=30);
+    }
+  }
+
+  function renderNums(){
+    document.getElementById("mu").textContent=money(MU);
+    document.getElementById("sig").textContent=money(SIGMA);
+    document.getElementById("nOut").textContent=n;
+    document.getElementById("nEcho").textContent=n;
+    document.getElementById("predSe").textContent=money(SIGMA/Math.sqrt(n));
+    document.getElementById("cnt").textContent=means.length;
+    if(means.length<2){
+      document.getElementById("mom").textContent="—";
+      document.getElementById("obsSe").textContent="—";
+      return;
+    }
+    var m=0,i; for(i=0;i<means.length;i++) m+=means[i]; m/=means.length;
+    var s=0; for(i=0;i<means.length;i++){var d=means[i]-m; s+=d*d;}
+    document.getElementById("mom").textContent=money(m);
+    document.getElementById("obsSe").textContent=money(Math.sqrt(s/means.length));
+  }
+
+  /* ---------- the guided narration ---------- */
+  var STEPS=[
+    ["Start here","Below is our whole population — the medical charges billed to 5,000 people over one year. Look at its shape for a moment before you touch anything. It is lopsided: most people cost very little, and a long tail of people cost a great deal. <strong>It is nothing like a bell curve.</strong> Remember that, because it is the entire point of what follows."],
+    ["You just took one sample","You picked "+"<span id='nz'></span>"+" people at random. Each dot is one of them, and the teal line is their average — a single number standing in for the whole group. That one number is now the first entry in the bottom chart. Draw a few more by hand and watch them land in different places. <strong>The average moves around, because who you happen to pick moves around.</strong>"],
+    ["Keep collecting","You are building something. Each new average adds to the pile at the bottom. Press <em>Draw 500</em> and watch the shape fill in."],
+    ["Now compare the two charts","The population at the top is still lopsided — that never changed. But look at the pile of averages at the bottom. It is <strong>symmetric, centered, and bell-shaped</strong>, and it is far narrower than the population it came from. You did not do anything to make that happen. It is simply what averages do.<br><br>This is the <strong>central limit theorem</strong>. The population does not have to be normal. The <em>sample means</em> come out normal anyway."],
+    ["Change the sample size","Now switch <em>n</em> between 2 and 100 and rebuild the pile each time. Two things happen, and only one of them is obvious.<br><br>The pile gets <strong>narrower</strong> as n grows — bigger samples give more reliable averages. And the pile gets <strong>more bell-shaped</strong> as n grows, even from this very lopsided population.<br><br>Then check the bottom two rows of the numbers panel. The spread you measured should be closing in on <em>σ&#8202;/&#8202;√n</em>, the value that was predicted before you drew a single sample."]
+  ];
+  function narrate(k){
+    if(k<step) return;
+    step=k;
+    document.getElementById("note").querySelector("b").textContent=STEPS[k][0];
+    document.getElementById("noteTxt").innerHTML=STEPS[k][1];
+    var z=document.getElementById("nz"); if(z) z.textContent=n;
+  }
+
+  /* ---------- actions ---------- */
+  function sampleOnce(){
+    var s=new Array(n);
+    for(var i=0;i<n;i++) s[i]=POP[(Math.random()*N)|0];
+    var m=0; for(i=0;i<n;i++) m+=s[i]; m/=n;
+    means.push(m);
+    return s;
+  }
+  function drawMany(k){
+    for(var i=0;i<k;i++) lastSample=sampleOnce();
+    renderSample(); renderSD(); renderNums();
+    if(means.length>=200) narrate(4);
+    else if(means.length>=25) narrate(3);
+    else if(means.length>=3) narrate(2);
+    else narrate(1);
+  }
+  function clear(){
+    means=[]; lastSample=null;
+    renderSample(); renderSD(); renderNums();
+  }
+
+  /* ---------- wiring ---------- */
+  var box=document.getElementById("nBtns");
+  SIZES.forEach(function(v){
+    var b=document.createElement("button");
+    b.textContent=v; b.setAttribute("aria-pressed", v===n?"true":"false");
+    b.addEventListener("click",function(){
+      n=v; clear();
+      Array.prototype.forEach.call(box.children,function(c){
+        c.setAttribute("aria-pressed", (+c.textContent)===n ? "true":"false");
+      });
+      if(step>=3) narrate(4);
+    });
+    box.appendChild(b);
+  });
+  document.getElementById("d1").addEventListener("click",function(){drawMany(1)});
+  document.getElementById("d25").addEventListener("click",function(){drawMany(25)});
+  document.getElementById("d500").addEventListener("click",function(){drawMany(500)});
+  document.getElementById("reset").addEventListener("click",clear);
+  document.getElementById("zoom").addEventListener("change",function(e){ zoomed=e.target.checked; renderSD(); });
+
+  renderPop(); renderSample(); renderSD(); renderNums();
+})();
+</script>
+</body>
+</html>
