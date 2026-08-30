@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitting a Line — QMB 6315</title>
+<style>
+  :root{
+    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
+    --rule:#E8DFD2; --pop:#C4703A; --pop-soft:#EFD9C7; --mean:#2F6F6B; --mean-soft:#CFE2E0;
+    --flag:#B8433A; --note:#FBF3E7; --dot:#8A7F72;
+    --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.6 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    -webkit-font-smoothing:antialiased; padding:28px 20px 56px;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:29px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 26px;font-size:16.5px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 3px;font-weight:600;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif}
+  .card .cap{color:var(--muted);font-size:14.5px;margin:0 0 14px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .axis-lbl{font:11.5px ui-sans-serif,-apple-system,"Segoe UI",sans-serif;fill:var(--faint)}
+  .tick{stroke:var(--rule);stroke-width:1}
+  .handle{cursor:grab;touch-action:none}
+  .handle:active{cursor:grabbing}
+
+  .note{background:var(--note);border:1px solid #EFDFC4;border-left:3px solid var(--pop);
+        border-radius:8px;padding:15px 18px;margin-bottom:18px}
+  .note b{display:block;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop);margin-bottom:5px;font-weight:700}
+  .note p{margin:0;font-size:16px}
+
+  .caution{background:#FDF4F3;border:1px solid #F0D6D3;border-left:3px solid var(--flag)}
+  .caution h2{color:var(--flag)}
+  .caution p{margin:0 0 11px;font-size:15.5px}
+  .caution p:last-child{margin-bottom:0}
+
+  .ctl{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .grp{flex:1 1 auto;min-width:200px}
+  .grp>span{display:block;font:600 11.5px/1 ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
+        letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .btns{display:flex;flex-wrap:wrap;gap:7px}
+  button{
+    font:15px/1 "Iowan Old Style",Georgia,serif; color:var(--ink); background:#fff;
+    border:1px solid var(--rule); border-radius:7px; padding:9px 14px; cursor:pointer;
+    transition:background .13s,border-color .13s,color .13s;
+  }
+  button:hover{background:#FAF6EF;border-color:#D8CBB8}
+  button:active{background:#F3EBDE}
+  button[aria-pressed="true"]{background:var(--mean);border-color:var(--mean);color:#fff}
+  button.go{background:var(--pop);border-color:var(--pop);color:#fff}
+  button.go:hover{background:#B0632F;border-color:#B0632F}
+  button.ghost{color:var(--muted)}
+  .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14.5px;margin-top:12px;cursor:pointer;user-select:none}
+  .zoom input{width:16px;height:16px;accent-color:var(--mean);cursor:pointer}
+
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  td{padding:8px 0;border-bottom:1px solid var(--rule)}
+  tr:last-child td{border-bottom:0}
+  td.k{color:var(--muted)}
+  td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  td.v.pop{color:var(--pop)} td.v.mean{color:var(--mean)} td.v.flag{color:var(--flag)}
+  .split{display:flex;gap:18px;flex-wrap:wrap}
+  .split>div{flex:1 1 300px}
+  .hint{font-size:13.5px;color:var(--faint);margin:10px 0 0;font-style:italic}
+
+  .eqn{text-align:center;font-size:24px;padding:4px 0 2px;font-variant-numeric:tabular-nums}
+  .eqn .co{font-weight:700;color:var(--pop)}
+  .sse{text-align:center;font-size:17px;margin:12px 0 0;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .sse .big{font-size:26px;font-weight:700;color:var(--pop)}
+  .verdict{margin-top:13px;padding:12px 15px;border-radius:8px;font-size:15.5px;text-align:center;
+           background:#F7F4EF;color:#6B5F4F;border:1px solid #E4DACA}
+  .verdict.win{background:#F1F7F5;color:#25604F;border-color:#CFE2DA;font-weight:600}
+  .reveal{margin-top:13px;padding:13px 16px;border-radius:8px;font-size:15.5px;
+          background:#F1F7F5;color:#25604F;border:1px solid #CFE2DA}
+  .outlier-warn{margin-top:13px;padding:13px 16px;border-radius:8px;font-size:15.5px;
+          background:#FDF0EE;color:var(--flag);border:1px solid #F0D6D3}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  .legend i.dot{width:9px;height:9px;border-radius:50%;vertical-align:-1px}
+  footer{color:var(--faint);font-size:13.5px;text-align:center;margin-top:30px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Draw the line yourself</h1>
+  <p class="sub">QMB 6315 · Week 7 · Work through this before the homework. It takes about ten minutes.</p>
+
+  <div class="note" id="note">
+    <b>Start here</b>
+    <p id="noteTxt">Seventy people from a heart study: their age, and their total cholesterol. Your line starts <strong>flat, at the average cholesterol</strong> — that is the model which says age tells you nothing at all. Grab either orange handle and tilt the line until it fits the cloud better. The thin vertical lines are your misses.</p>
+  </div>
+
+  <!-- CHART -->
+  <div class="card">
+    <h2>Cholesterol and age</h2>
+    <p class="cap">Each dot is one person. Drag either orange handle to move your line.</p>
+    <svg id="chart" viewBox="0 0 860 400" role="img" aria-label="Scatter plot of cholesterol against age with a movable fitted line"></svg>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--dot)"></i>One person</span>
+      <span><i style="background:var(--pop)"></i>Your line</span>
+      <span><i style="background:var(--pop);opacity:.45"></i>Your misses (residuals)</span>
+      <span id="lsLegend" style="display:none"><i style="background:var(--mean)"></i>The least-squares line</span>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="ctl">
+      <div class="grp">
+        <span>Your line</span>
+        <div class="btns">
+          <button class="go" id="reveal">Show me the best line</button>
+          <button class="ghost" id="reset">Start over</button>
+        </div>
+      </div>
+      <div class="grp">
+        <span>The data</span>
+        <div class="btns">
+          <button id="outlier" aria-pressed="false">Add one unusual patient</button>
+        </div>
+      </div>
+    </div>
+    <label class="zoom"><input type="checkbox" id="showRes" checked> Show the misses</label>
+  </div>
+
+  <!-- YOUR LINE -->
+  <div class="card">
+    <h2>Your line</h2>
+    <p class="cap">In the book’s notation, a fitted line is written <em>ŷ = a + bx</em> — <em>a</em> is the y-intercept, <em>b</em> is the slope.</p>
+    <p class="eqn" id="eqn">—</p>
+    <p class="sse" id="sse">—</p>
+    <div class="verdict" id="verdict">&nbsp;</div>
+    <div class="reveal" id="revealBox" style="display:none"></div>
+  </div>
+
+  <!-- READING IT -->
+  <div class="card">
+    <h2>Reading it out loud</h2>
+    <p class="cap">A coefficient you cannot say in a sentence is a coefficient you do not understand.</p>
+    <p id="slopeSay" style="margin:0 0 10px">—</p>
+    <p id="interSay" style="margin:0;color:var(--muted)">—</p>
+  </div>
+
+  <!-- NUMBERS -->
+  <div class="card">
+    <h2>The numbers</h2>
+    <div class="split">
+      <div>
+        <table>
+          <tr><td class="k">Your y-intercept, <em>a</em></td><td class="v pop" id="aOut">—</td></tr>
+          <tr><td class="k">Your slope, <em>b</em></td><td class="v pop" id="bOut">—</td></tr>
+          <tr><td class="k">Your SSE</td><td class="v pop" id="sseOut">—</td></tr>
+          <tr><td class="k">People in the study</td><td class="v" id="nOut">—</td></tr>
+        </table>
+      </div>
+      <div>
+        <table>
+          <tr><td class="k">Best possible <em>a</em></td><td class="v mean" id="aBest">hidden</td></tr>
+          <tr><td class="k">Best possible <em>b</em></td><td class="v mean" id="bBest">hidden</td></tr>
+          <tr><td class="k">Smallest possible SSE</td><td class="v mean" id="sseBest">hidden</td></tr>
+          <tr><td class="k">Correlation <em>r</em> · <em>r</em><sup>2</sup></td><td class="v mean" id="rOut">hidden</td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="hint" id="outlierNote">&nbsp;</p>
+  </div>
+
+  <!-- OUTLIER LESSON -->
+  <div class="card caution">
+    <h2>What least squares will do to you</h2>
+    <p><strong>Least squares squares the misses.</strong> A person the line misses by 60 contributes 3,600 to the total; a person it misses by 6 contributes 36. One hundred times the penalty for ten times the miss. The line will therefore bend a long way to avoid one extreme point, at the cost of fitting everyone else slightly worse.</p>
+    <p>Press <em>Add one unusual patient</em> and watch. That single person is older than anyone else in the study and has cholesterol far below the trend — and because they sit at the far edge of the age range, they have <strong>leverage</strong>: the line pivots around the middle of the data, so a point at the end moves it most.</p>
+    <p>Nothing in the arithmetic will warn you. The formula returns a slope, an <em>r</em><sup>2</sup>, and a confident-looking equation either way. <strong>The only defence is looking at the scatter plot first</strong> — which is why the book has you draw one before it lets you fit anything.</p>
+  </div>
+
+  <footer>
+    Ages and cholesterol values are simulated to match the pattern in the Framingham Heart Study.<br>
+    Notation follows OpenStax <em>Introductory Statistics 2e</em>, §12.2–12.6 — note <em>ŷ = a + bx</em>, with <em>a</em> the intercept and <em>b</em> the slope, not <em>b</em><sub>0</sub> + <em>b</em><sub>1</sub><em>x</em>.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- deterministic data so every student sees the same 70 people ---------- */
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function gauss(rnd){
+    var u=0,v=0;
+    while(u===0) u=rnd();
+    while(v===0) v=rnd();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+  var rnd=mulberry32(20261128), BASE=[], i;
+  for(i=0;i<70;i++){
+    var age = 30 + rnd()*40;
+    var chol = 175 + 1.4*(age-30) + gauss(rnd)*30;
+    BASE.push({x:Math.round(age*10)/10, y:Math.round(Math.min(340,Math.max(120,chol)))});
+  }
+  // one older patient, far below the trend, sitting at the edge of the age range
+  var ODD={x:78.5, y:132};
+
+  /* ---------- state ---------- */
+  var withOdd=false, revealed=false, showRes=true, step=0;
+  var y1=0, y2=0;                       // the two handle heights define the line
+  var dragging=-1;
+
+  function data(){ return withOdd ? BASE.concat([ODD]) : BASE; }
+
+  function fit(d){
+    var n=d.length, sx=0, sy=0, k;
+    for(k=0;k<n;k++){ sx+=d[k].x; sy+=d[k].y; }
+    var mx=sx/n, my=sy/n, sxy=0, sxx=0, syy=0;
+    for(k=0;k<n;k++){
+      var dx=d[k].x-mx, dy=d[k].y-my;
+      sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy;
+    }
+    var b=sxy/sxx, a=my-b*mx;
+    var r=sxy/Math.sqrt(sxx*syy);
+    var sse=0;
+    for(k=0;k<n;k++){ var e=d[k].y-(a+b*d[k].x); sse+=e*e; }
+    return {a:a,b:b,r:r,r2:r*r,sse:sse,sst:syy,my:my,mx:mx,n:n};
+  }
+
+  /* ---------- geometry ---------- */
+  var W=860, HT=330, PL=52, PR=14, PT=14;
+  var XLO=27, XHI=83, YLO=100, YHI=350;
+  function X(v){ return PL+((v-XLO)/(XHI-XLO))*(W-PL-PR); }
+  function Y(v){ return PT+(1-(v-YLO)/(YHI-YLO))*(HT-PT); }
+  function invY(py){ return YLO+(1-(py-PT)/(HT-PT))*(YHI-YLO); }
+  function invX(px){ return XLO+((px-PL)/(W-PL-PR))*(XHI-XLO); }
+  var HX1=XLO+2, HX2=XHI-2;              // where the two handles live
+
+  function lineAB(){
+    var b=(y2-y1)/(HX2-HX1);
+    return {a:y1-b*HX1, b:b};
+  }
+  function myY(x){ var L=lineAB(); return L.a+L.b*x; }
+  function mySSE(){
+    var d=data(), s=0;
+    for(var k=0;k<d.length;k++){ var e=d[k].y-myY(d[k].x); s+=e*e; }
+    return s;
+  }
+
+  var NS="http://www.w3.org/2000/svg";
+  function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function n0(v){ return Math.round(v).toLocaleString("en-US"); }
+  function n2(v){ return (Math.round(v*100)/100).toFixed(2); }
+
+  /* ---------- chart ---------- */
+  function renderChart(){
+    var svg=document.getElementById("chart");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var d=data(), k;
+
+    // gridlines + axes
+    for(var gy=100;gy<=350;gy+=50){
+      svg.appendChild(el("line",{x1:PL,y1:Y(gy),x2:W-PR,y2:Y(gy),stroke:"#F0E9DE","stroke-width":1}));
+      var gt=el("text",{x:PL-9,y:Y(gy)+4,"text-anchor":"end",class:"axis-lbl"});
+      gt.textContent=gy; svg.appendChild(gt);
+    }
+    for(var gx=30;gx<=80;gx+=10){
+      svg.appendChild(el("line",{x1:X(gx),y1:HT,x2:X(gx),y2:HT+5,class:"tick"}));
+      var xt=el("text",{x:X(gx),y:HT+19,"text-anchor":"middle",class:"axis-lbl"});
+      xt.textContent=gx; svg.appendChild(xt);
+    }
+    svg.appendChild(el("line",{x1:PL,y1:HT,x2:W-PR,y2:HT,stroke:"#DCD2C4","stroke-width":1}));
+    var xl=el("text",{x:(PL+W-PR)/2,y:HT+38,"text-anchor":"middle",class:"axis-lbl"});
+    xl.textContent="age (years)"; svg.appendChild(xl);
+    var yl=el("text",{x:14,y:HT/2,"text-anchor":"middle",class:"axis-lbl",
+      transform:"rotate(-90 14 "+(HT/2)+")"});
+    yl.textContent="total cholesterol (mg/dL)"; svg.appendChild(yl);
+
+    // residuals
+    if(showRes){
+      for(k=0;k<d.length;k++){
+        var py=myY(d[k].x);
+        svg.appendChild(el("line",{x1:X(d[k].x),y1:Y(d[k].y),x2:X(d[k].x),y2:Y(py),
+          stroke:"var(--pop)","stroke-width":1.4,opacity:.45}));
+      }
+    }
+
+    // the least-squares line, once revealed
+    if(revealed){
+      var F=fit(d);
+      svg.appendChild(el("line",{x1:X(XLO),y1:Y(F.a+F.b*XLO),x2:X(XHI),y2:Y(F.a+F.b*XHI),
+        stroke:"var(--mean)","stroke-width":2.6,"stroke-dasharray":"7 5"}));
+    }
+
+    // the points
+    for(k=0;k<d.length;k++){
+      var odd = withOdd && d[k]===ODD;
+      svg.appendChild(el("circle",{cx:X(d[k].x),cy:Y(d[k].y),r:odd?7:4.4,
+        fill:odd?"var(--flag)":"var(--dot)",opacity:odd?.95:.62}));
+    }
+
+    // your line
+    svg.appendChild(el("line",{x1:X(HX1),y1:Y(y1),x2:X(HX2),y2:Y(y2),
+      stroke:"var(--pop)","stroke-width":3}));
+
+    // the handles
+    [[HX1,y1],[HX2,y2]].forEach(function(h,ix){
+      svg.appendChild(el("circle",{cx:X(h[0]),cy:Y(h[1]),r:10,fill:"#fff",
+        stroke:"var(--pop)","stroke-width":3,class:"handle","data-h":ix}));
+    });
+  }
+
+  /* ---------- readouts ---------- */
+  function renderNums(){
+    var d=data(), L=lineAB(), F=fit(d), s=mySSE();
+
+    document.getElementById("eqn").innerHTML =
+      "ŷ = <span class='co'>"+n2(L.a)+"</span> + <span class='co'>"+n2(L.b)+"</span> x";
+
+    document.getElementById("sse").innerHTML =
+      "Sum of squared misses (SSE): <span class='big'>"+n0(s)+"</span>";
+
+    // measured against the flat starting line, not against zero: 0% = flat, 100% = optimal.
+    // A raw SSE ratio would call the flat opening line "better than flat".
+    var v=document.getElementById("verdict");
+    var prog=(F.sst-s)/(F.sst-F.sse);
+    if(prog>=0.995){ v.className="verdict win"; v.textContent="You have found it. No straight line fits these people better than yours."; }
+    else if(prog>=0.90){ v.className="verdict win"; v.textContent="Very close — you have captured "+Math.round(prog*100)+"% of what the best line achieves."; }
+    else if(prog>=0.5){ v.className="verdict"; v.textContent="Getting there — "+Math.round(prog*100)+"% of the way from flat to best. Keep tilting."; }
+    else if(prog>0.02){ v.className="verdict"; v.textContent="Better than flat, but only "+Math.round(prog*100)+"% of the way. There is a lot left on the table."; }
+    else if(prog>=-0.02){ v.className="verdict"; v.textContent="Your line is flat — it predicts the same cholesterol for a 30-year-old and a 70-year-old. Tilt it."; }
+    else { v.className="verdict"; v.textContent="This is worse than the flat line you started with. You would do better ignoring age entirely."; }
+
+    document.getElementById("aOut").textContent=n2(L.a);
+    document.getElementById("bOut").textContent=n2(L.b);
+    document.getElementById("sseOut").textContent=n0(s);
+    document.getElementById("nOut").textContent=d.length;
+
+    if(revealed){
+      document.getElementById("aBest").textContent=n2(F.a);
+      document.getElementById("bBest").textContent=n2(F.b);
+      document.getElementById("sseBest").textContent=n0(F.sse);
+      document.getElementById("rOut").textContent=n2(F.r)+" · "+n2(F.r2);
+      document.getElementById("revealBox").style.display="block";
+      document.getElementById("revealBox").innerHTML=
+        "The teal line minimises SSE exactly — <strong>"+n0(F.sse)+"</strong> against your "+n0(s)+
+        ". No formula-free tilting can beat it, because calculus found it.<br><br>"+
+        "And here is where <em>r</em><sup>2</sup> comes from. Your line started flat at the average, and that flat line's SSE is <strong>"+
+        n0(F.sst)+"</strong> — the total variation in cholesterol, before age explains anything. The best line brings it down to "+n0(F.sse)+
+        ". The share removed is 1 − "+n0(F.sse)+"/"+n0(F.sst)+" = <strong>"+n2(F.r2)+"</strong>. That is <em>r</em><sup>2</sup>, and it is not a magic number — it is the fraction of the misses that knowing someone's age gets rid of.";
+    }
+
+    // saying it out loud
+    document.getElementById("slopeSay").innerHTML =
+      "<strong>Slope, b = "+n2(L.b)+".</strong> Each additional year of age is associated with about <strong>"+
+      n2(Math.abs(L.b))+" mg/dL "+(L.b>=0?"more":"less")+"</strong> total cholesterol. Ten years of age, about "+
+      n0(Math.abs(L.b)*10)+" mg/dL.";
+    document.getElementById("interSay").innerHTML =
+      "Intercept, a = "+n2(L.a)+". Strictly this is the predicted cholesterol at <strong>age zero</strong> — a newborn — which is nonsense: "+
+      "the youngest person here is 30. The intercept is where the arithmetic anchors the line, not a finding about babies. "+
+      "This is why you never read a regression outside the range of the data you fitted it on.";
+
+    var on=document.getElementById("outlierNote");
+    if(withOdd && revealed){
+      var clean=fit(BASE);
+      var resid=ODD.y-(clean.a+clean.b*ODD.x);
+      on.innerHTML="<span style='color:var(--flag);font-style:normal'><strong>One person moved the slope from "+
+        n2(clean.b)+" to "+n2(F.b)+"</strong> — a change of "+n2(Math.abs(F.b-clean.b))+" mg/dL per year, or "+
+        Math.round(100*Math.abs(F.b-clean.b)/Math.abs(clean.b))+"%. <em>r</em><sup>2</sup> fell from "+n2(clean.r2)+" to "+n2(F.r2)+
+        ". Out of 71 people.<br><br>Here is why. Under the clean line that patient sits "+n0(Math.abs(resid))+
+        " mg/dL off, so squaring puts <strong>"+n0(resid*resid)+"</strong> into the total on their own — about "+
+        Math.round(100*resid*resid/clean.sse)+"% of the entire SSE of the other seventy people combined. Least squares will pay a lot to reduce that.</span>";
+    }else if(withOdd){
+      on.innerHTML="Press <em>Show me the best line</em> to see how far this one person drags it.";
+    }else{
+      on.innerHTML="&nbsp;";
+    }
+  }
+
+  /* ---------- narration ---------- */
+  var TXT=[
+    ["Start here","Seventy people from a heart study: their age, and their total cholesterol. Your line starts <strong>flat, at the average cholesterol</strong> — that is the model which says age tells you nothing at all. Grab either orange handle and tilt the line until it fits the cloud better. The thin vertical lines are your misses."],
+    ["What you are minimising","Each thin vertical line is a <strong>residual</strong> — the gap between what your line predicts for that person and what they actually had. Least squares <em>squares</em> each gap and adds them up. That total is the SSE below, and your job is to make it as small as you can.<br><br>Squaring matters more than it sounds. Missing one person by 60 costs 3,600; missing ten people by 6 each costs 360 in total. <strong>The method hates one big miss far more than many small ones</strong>, and that single fact explains most of how regression behaves."],
+    ["Where r² actually comes from","The teal line is the one calculus finds — the exact minimum. Compare the two numbers.<br><br>Now look at the reveal box. Your line <em>started</em> flat at the average, and that flat line's SSE has a name: the <strong>total variation</strong>. It is how wrong you are when you know nothing about a person except the group average. The best line reduces that, and the fraction it removes is <em>r</em><sup>2</sup>.<br><br>So <em>r</em><sup>2</sup> never means “percent correct.” It means knowing someone's age gets rid of <em>that fraction</em> of the misses you would otherwise make, and leaves the rest of them fully intact. For health data the figure you are looking at is a perfectly respectable result — and it should also tell you how poor this line is at predicting any one individual person."],
+    ["One patient","One person, out of seventy-one. Press <em>Show me the best line</em> and read the flagged line in the numbers panel.<br><br>They are not a typo and not a data-entry error — just someone real and unusual, sitting at the far edge of the age range where the line has the most leverage to swing. Least squares had no way to know they were unrepresentative, so it did what it always does: minimised the squares, and dragged everyone else's prediction along with it.<br><br><strong>Look at the scatter plot before you trust the equation.</strong> That is the entire defence, and it is the reason the book makes you plot the data before it teaches you to fit it."]
+  ];
+  function narrate(k){
+    if(k<step) return;
+    step=k;
+    document.getElementById("note").querySelector("b").textContent=TXT[k][0];
+    document.getElementById("noteTxt").innerHTML=TXT[k][1];
+  }
+
+  /* ---------- update ---------- */
+  function update(){ renderChart(); renderNums(); }
+  function resetLine(){
+    var F=fit(data());
+    y1=F.my; y2=F.my;       // flat, at the average — the "age tells you nothing" model
+    revealed=false;
+    document.getElementById("revealBox").style.display="none";
+    document.getElementById("lsLegend").style.display="none";
+    ["aBest","bBest","sseBest","rOut"].forEach(function(id){
+      document.getElementById(id).textContent="hidden";
+    });
+    update();
+  }
+
+  /* ---------- dragging ---------- */
+  var svg=document.getElementById("chart");
+  function toVB(ev){
+    var r=svg.getBoundingClientRect();
+    return {x:(ev.clientX-r.left)/r.width*W, y:(ev.clientY-r.top)/r.width*W};
+  }
+  svg.addEventListener("pointerdown",function(ev){
+    var p=toVB(ev);
+    var d1=Math.hypot(p.x-X(HX1),p.y-Y(y1)), d2=Math.hypot(p.x-X(HX2),p.y-Y(y2));
+    var near=Math.min(d1,d2);
+    if(near>28) return;                    // not on a handle — let the page scroll
+    dragging = d1<=d2 ? 0 : 1;
+    try{ svg.setPointerCapture(ev.pointerId); }catch(e){}
+    ev.preventDefault();
+  });
+  svg.addEventListener("pointermove",function(ev){
+    if(dragging<0) return;
+    var p=toVB(ev), val=Math.max(YLO+4,Math.min(YHI-4,invY(p.y)));
+    if(dragging===0) y1=val; else y2=val;
+    update(); narrate(1);
+    ev.preventDefault();
+  });
+  function endDrag(){ dragging=-1; }
+  svg.addEventListener("pointerup",endDrag);
+  svg.addEventListener("pointercancel",endDrag);
+
+  /* ---------- wiring ---------- */
+  document.getElementById("reveal").addEventListener("click",function(){
+    revealed=true;
+    document.getElementById("lsLegend").style.display="inline";
+    update();
+    narrate(withOdd?3:2);
+  });
+  document.getElementById("reset").addEventListener("click",resetLine);
+  document.getElementById("outlier").addEventListener("click",function(){
+    withOdd=!withOdd;
+    this.setAttribute("aria-pressed",withOdd?"true":"false");
+    this.textContent = withOdd ? "Remove that patient" : "Add one unusual patient";
+    update();
+    if(withOdd) narrate(3);
+  });
+  document.getElementById("showRes").addEventListener("change",function(e){
+    showRes=e.target.checked; renderChart();
+  });
+
+  resetLine();
+})();
+</script>
+</body>
+</html>

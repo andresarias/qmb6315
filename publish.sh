@@ -6,7 +6,7 @@ set -e
 VAULT="/Users/andresarias/vaults/LionMind/01 Teaching/_QMB 6315/Widgets"
 REPO="$(cd "$(dirname "$0")" && pwd)"
 
-for f in z-score-explorer.html clt-sandbox.html ci-simulator.html p-value-visualizer.html; do
+for f in z-score-explorer.html clt-sandbox.html ci-simulator.html p-value-visualizer.html regression-line.html; do
   cp "$VAULT/$f" "$REPO/$f"
 done
 

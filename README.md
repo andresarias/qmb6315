@@ -11,6 +11,8 @@ Because `andresarias.github.io` carries a custom domain, this project site is se
 | 2 | `z-score-explorer.html` | Normal distribution, z-scores, and when the normal model fails |
 | 3 | `clt-sandbox.html` | Sampling distribution of the mean, central limit theorem |
 | 4 | `ci-simulator.html` | Confidence intervals, and what "95% confident" does not mean |
+| 5–6 | `p-value-visualizer.html` | Hypothesis tests, p-values, statistical vs practical significance |
+| 7 | `regression-line.html` | Least squares, residuals, r², and outlier leverage |
 
 Each file is standalone HTML with inline CSS, SVG, and JavaScript — no build step, no dependencies, no network calls. Open one in a browser and it works.
 
@@ -37,4 +39,4 @@ Canvas strips `<script>` from the Rich Content Editor, so these cannot be pasted
         title="Z-score explorer"></iframe>
 ```
 
-Heights: z-score explorer **2400**, CLT sandbox **1500**, CI simulator **2950**. Keep the "open in its own tab" link — on a phone the pages run considerably taller than any fixed iframe height.
+Heights: z-score explorer **2400**, CLT sandbox **1500**, CI simulator **2950**, p-value visualizer **2800**, regression line **2700**. Keep the "open in its own tab" link — on a phone the pages run considerably taller than any fixed iframe height.
