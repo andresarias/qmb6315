@@ -6,9 +6,9 @@
 <title>Confidence Intervals — QMB 6315</title>
 <style>
   :root{
-    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
-    --rule:#E8DFD2; --pop:#C4703A; --pop-soft:#EFD9C7; --mean:#2F6F6B; --mean-soft:#CFE2E0;
-    --flag:#B8433A; --note:#FBF3E7; --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
+    --bg:#F7F9FB; --card:#FFFFFF; --ink:#081E3F; --muted:#55637A; --faint:#657385;
+    --rule:#DCE3EC; --pop:#D1A644; --pop-text:#7A5F1C; --pop-soft:#F0E2C0; --mean:#1B4079; --mean-soft:#CBD8EA;
+    --flag:#CC0066; --note:#FDF7E8; --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -28,14 +28,14 @@
   .tick{stroke:var(--rule);stroke-width:1}
 
   /* guided note */
-  .note{background:var(--note);border:1px solid #EFDFC4;border-left:3px solid var(--pop);
+  .note{background:var(--note);border:1px solid #EFDCA8;border-left:3px solid var(--pop);
         border-radius:8px;padding:15px 18px;margin-bottom:18px}
   .note b{display:block;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
-        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop);margin-bottom:5px;font-weight:700}
+        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop-text);margin-bottom:5px;font-weight:700}
   .note p{margin:0;font-size:16px}
 
   /* the caution card */
-  .caution{background:#FDF4F3;border:1px solid #F0D6D3;border-left:3px solid var(--flag)}
+  .caution{background:#FDF2F7;border:1px solid #F2CADE;border-left:3px solid var(--flag)}
   .caution h2{color:var(--flag)}
   .caution p{margin:0 0 11px;font-size:15.5px}
   .caution p:last-child{margin-bottom:0}
@@ -51,11 +51,11 @@
     border:1px solid var(--rule); border-radius:7px; padding:9px 14px; cursor:pointer;
     transition:background .13s,border-color .13s,color .13s;
   }
-  button:hover{background:#FAF6EF;border-color:#D8CBB8}
-  button:active{background:#F3EBDE}
+  button:hover{background:#F3F6FA;border-color:#B9C6D8}
+  button:active{background:#E9EFF6}
   button[aria-pressed="true"]{background:var(--mean);border-color:var(--mean);color:#fff}
-  button.go{background:var(--pop);border-color:var(--pop);color:#fff}
-  button.go:hover{background:#B0632F;border-color:#B0632F}
+  button.go{background:var(--pop);border-color:var(--pop);color:var(--ink);font-weight:600}
+  button.go:hover{background:#C4993A;border-color:#C4993A}
   button.ghost{color:var(--muted)}
   .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14.5px;margin-top:14px;cursor:pointer;user-select:none}
   .zoom input{width:16px;height:16px;accent-color:var(--flag);cursor:pointer}
@@ -66,7 +66,7 @@
   tr:last-child td{border-bottom:0}
   td.k{color:var(--muted)}
   td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-  td.v.pop{color:var(--pop)} td.v.mean{color:var(--mean)} td.v.flag{color:var(--flag)}
+  td.v.pop{color:var(--pop-text)} td.v.mean{color:var(--mean)} td.v.flag{color:var(--flag)}
   .split{display:flex;gap:18px;flex-wrap:wrap}
   .split>div{flex:1 1 300px}
   .hint{font-size:13.5px;color:var(--faint);margin:10px 0 0;font-style:italic}
@@ -144,7 +144,7 @@
   <!-- ALL STUDIES -->
   <div class="card">
     <h2>Every study you have run</h2>
-    <p class="cap" id="stackCap">One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. The vertical orange line is the truth, and it never moves.</p>
+    <p class="cap" id="stackCap">One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. The vertical navy line is the truth, and it never moves.</p>
     <svg id="ciSvg" viewBox="0 0 860 120" role="img" aria-label="Stacked confidence intervals from every simulated study"></svg>
     <div class="legend" id="legend">
       <span><i style="background:var(--mean)"></i>Interval contains <em>μ</em></span>
@@ -183,7 +183,7 @@
   <div class="card caution">
     <h2>What it does <em>not</em> mean</h2>
     <p>Almost everyone, including people who publish research, reads a 95% confidence interval as <em>“there is a 95% chance the true value is inside my interval.”</em> That is not what it says.</p>
-    <p>Once your study is finished, your interval either contains <em>μ</em> or it does not. There is no chance left in it. Look at the red lines above: from the inside, nothing about those studies looks wrong. The researchers did everything correctly. They were unlucky, and they will never find out.</p>
+    <p>Once your study is finished, your interval either contains <em>μ</em> or it does not. There is no chance left in it. Look at the magenta lines above: from the inside, nothing about those studies looks wrong. The researchers did everything correctly. They were unlucky, and they will never find out.</p>
     <p><strong>The 95% describes the method, not your answer.</strong> It says that a procedure like this one, repeated over and over, produces intervals that capture the truth about 95% of the time. Which of your studies is one of the good ones is a question the interval cannot answer.</p>
   </div>
 
@@ -312,7 +312,7 @@
       tx.textContent=s;
       svg.appendChild(tx);
     }
-    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#C6D0DE","stroke-width":1}));
     var u=el("text",{x:(PL+W-PR)/2,y:H+35,"text-anchor":"middle",class:"axis-lbl"});
     u.textContent="reduction in systolic blood pressure (mmHg)";
     svg.appendChild(u);
@@ -339,7 +339,7 @@
     // the truth
     if(!blind){
       svg.appendChild(el("line",{x1:X(MU),y1:16,x2:X(MU),y2:H,stroke:"var(--pop)","stroke-width":2.5}));
-      var t=el("text",{x:X(MU)+7,y:22,class:"axis-lbl",fill:"var(--pop)","font-weight":"700","font-size":"13"});
+      var t=el("text",{x:X(MU)+7,y:22,class:"axis-lbl",fill:"var(--pop-text)","font-weight":"700","font-size":"13"});
       t.textContent="μ = "+mm(MU);
       svg.appendChild(t);
     }
@@ -389,7 +389,7 @@
   function renderCI(){
     document.getElementById("stackCap").innerHTML = blind
       ? "One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. <strong>The truth is no longer shown</strong>, so there is no way to tell which of these studies got it right."
-      : "One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. The vertical orange line is the truth, and it never moves.";
+      : "One horizontal line per study. The dot is that study’s <em>x̄</em>; the line is its confidence interval. The vertical navy line is the truth, and it never moves.";
     var svg=document.getElementById("ciSvg");
     while(svg.firstChild) svg.removeChild(svg.firstChild);
     var W=860,PL=8,PR=8, span=W-PL-PR;
@@ -405,7 +405,7 @@
     // the truth line — full height of whatever plot we are about to draw
     if(!blind){
       svg.appendChild(el("line",{x1:X(MU),y1:14,x2:X(MU),y2:H,stroke:"var(--pop)","stroke-width":2.5}));
-      var t=el("text",{x:X(MU),y:10,"text-anchor":"middle",class:"axis-lbl",fill:"var(--pop)","font-weight":"700","font-size":"12.5"});
+      var t=el("text",{x:X(MU),y:10,"text-anchor":"middle",class:"axis-lbl",fill:"var(--pop-text)","font-weight":"700","font-size":"12.5"});
       t.textContent="μ";
       svg.appendChild(t);
     }
@@ -420,7 +420,7 @@
 
     for(var i=0;i<rows;i++){
       var st=shown[i], y=top+i*rowH+rowH/2;
-      var col = blind ? "#8C8378" : (st.hit ? "var(--mean)" : "var(--flag)");
+      var col = blind ? "#7E8B9E" : (st.hit ? "var(--mean)" : "var(--flag)");
       var lw  = (!blind && !st.hit) ? 2.6 : 2;
       svg.appendChild(el("line",{x1:X(st.lo),y1:y,x2:X(st.hi),y2:y,stroke:col,"stroke-width":lw,opacity:.9,"stroke-linecap":"round"}));
       if(rowH>=8){
@@ -466,10 +466,10 @@
   /* ---------- guided narration ---------- */
   var STEPS=[
     ["Start here","A new drug is supposed to lower systolic blood pressure. Below is every patient it would ever help or fail to help — the whole population, 5,000 people. Because this is a simulation, we get to see something no researcher on earth has ever seen: <strong>the true average reduction, <em>μ</em></strong>, marked in orange. Real researchers never know this number. That is the entire reason confidence intervals exist. Now go run a study."],
-    ["You just ran a trial","You recruited <span id='nz'></span> patients, measured their average reduction (<em>x̄</em>), and reported an interval around it. That interval is your honest answer to “how much does this drug lower blood pressure?” — a range, not a single number, because you only saw <span id='nz2'></span> people out of 5,000. Notice where your interval sits relative to the orange line. Run a few more trials."],
-    ["The truth is not the thing that moves","Every trial recruits different patients, so every trial gets a different <em>x̄</em> and a different interval. Watch the stack build. <strong>The orange line has not moved once.</strong> <em>μ</em> is a fixed fact about the drug; your interval is the thing that wobbles. Almost everyone has this backwards. Now press <em>Run 100</em>."],
-    ["Count the red ones","Roughly one interval in twenty is red — it does not reach the truth. Those studies were run correctly. The patients were sampled properly, the arithmetic was right, and the answer is still wrong. That is not a flaw in the method; <strong>it is the price printed on the label.</strong> “95% confidence” is the promise that this happens about 5% of the time. Check your capture rate against your confidence level in the numbers panel."],
-    ["Three things to try","<strong>One.</strong> Drop to 90% confidence and run 100 again. More red. Now go to 99%. Almost no red — but look at how wide the intervals became. Certainty is bought with vagueness, and there is no way around it.<br><br><strong>Two.</strong> Set <em>n</em> to 10, then 400. The interval width is roughly <em>t&#8202;·&#8202;s&#8202;/&#8202;√n</em>, so quadrupling the patients only halves the width. That is why trials cost what they cost.<br><br><strong>Three.</strong> Tick <strong>Hide the true value</strong>. The colors go grey and the capture rate disappears, because without <em>μ</em> nobody can compute it. That grey stack is the real world. Every published trial is one of those lines, and no one knows which."]
+    ["You just ran a trial","You recruited <span id='nz'></span> patients, measured their average reduction (<em>x̄</em>), and reported an interval around it. That interval is your honest answer to “how much does this drug lower blood pressure?” — a range, not a single number, because you only saw <span id='nz2'></span> people out of 5,000. Notice where your interval sits relative to the navy line. Run a few more trials."],
+    ["The truth is not the thing that moves","Every trial recruits different patients, so every trial gets a different <em>x̄</em> and a different interval. Watch the stack build. <strong>The navy line has not moved once.</strong> <em>μ</em> is a fixed fact about the drug; your interval is the thing that wobbles. Almost everyone has this backwards. Now press <em>Run 100</em>."],
+    ["Count the magenta ones","Roughly one interval in twenty is red — it does not reach the truth. Those studies were run correctly. The patients were sampled properly, the arithmetic was right, and the answer is still wrong. That is not a flaw in the method; <strong>it is the price printed on the label.</strong> “95% confidence” is the promise that this happens about 5% of the time. Check your capture rate against your confidence level in the numbers panel."],
+    ["Three things to try","<strong>One.</strong> Drop to 90% confidence and run 100 again. More magenta. Now go to 99%. Almost almost no magenta — but look at how wide the intervals became. Certainty is bought with vagueness, and there is no way around it.<br><br><strong>Two.</strong> Set <em>n</em> to 10, then 400. The interval width is roughly <em>t&#8202;·&#8202;s&#8202;/&#8202;√n</em>, so quadrupling the patients only halves the width. That is why trials cost what they cost.<br><br><strong>Three.</strong> Tick <strong>Hide the true value</strong>. The colors go grey and the capture rate disappears, because without <em>μ</em> nobody can compute it. That grey stack is the real world. Every published trial is one of those lines, and no one knows which."]
   ];
   function narrate(k){
     if(k<step) return;

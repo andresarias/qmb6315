@@ -6,9 +6,9 @@
 <title>The Central Limit Theorem — QMB 6315</title>
 <style>
   :root{
-    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
-    --rule:#E8DFD2; --pop:#C4703A; --pop-soft:#EFD9C7; --mean:#2F6F6B; --mean-soft:#CFE2E0;
-    --flag:#B8433A; --note:#FBF3E7; --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
+    --bg:#F7F9FB; --card:#FFFFFF; --ink:#081E3F; --muted:#55637A; --faint:#657385;
+    --rule:#DCE3EC; --pop:#D1A644; --pop-text:#7A5F1C; --pop-soft:#F0E2C0; --mean:#1B4079; --mean-soft:#CBD8EA;
+    --flag:#CC0066; --note:#FDF7E8; --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -28,10 +28,10 @@
   .tick{stroke:var(--rule);stroke-width:1}
 
   /* guided note */
-  .note{background:var(--note);border:1px solid #EFDFC4;border-left:3px solid var(--pop);
+  .note{background:var(--note);border:1px solid #EFDCA8;border-left:3px solid var(--pop);
         border-radius:8px;padding:15px 18px;margin-bottom:18px}
   .note b{display:block;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
-        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop);margin-bottom:5px;font-weight:700}
+        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop-text);margin-bottom:5px;font-weight:700}
   .note p{margin:0;font-size:16px}
 
   /* controls */
@@ -45,11 +45,11 @@
     border:1px solid var(--rule); border-radius:7px; padding:9px 14px; cursor:pointer;
     transition:background .13s,border-color .13s,color .13s;
   }
-  button:hover{background:#FAF6EF;border-color:#D8CBB8}
-  button:active{background:#F3EBDE}
+  button:hover{background:#F3F6FA;border-color:#B9C6D8}
+  button:active{background:#E9EFF6}
   button[aria-pressed="true"]{background:var(--mean);border-color:var(--mean);color:#fff}
-  button.go{background:var(--pop);border-color:var(--pop);color:#fff}
-  button.go:hover{background:#B0632F;border-color:#B0632F}
+  button.go{background:var(--pop);border-color:var(--pop);color:var(--ink);font-weight:600}
+  button.go:hover{background:#C4993A;border-color:#C4993A}
   button.ghost{color:var(--muted)}
   .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14.5px;margin-top:12px;cursor:pointer;user-select:none}
   .zoom input{width:16px;height:16px;accent-color:var(--mean);cursor:pointer}
@@ -60,7 +60,7 @@
   tr:last-child td{border-bottom:0}
   td.k{color:var(--muted)}
   td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-  td.v.pop{color:var(--pop)} td.v.mean{color:var(--mean)}
+  td.v.pop{color:var(--pop-text)} td.v.mean{color:var(--mean)}
   .split{display:flex;gap:18px;flex-wrap:wrap}
   .split>div{flex:1 1 300px}
   .hint{font-size:13.5px;color:var(--faint);margin:10px 0 0;font-style:italic}
@@ -209,7 +209,7 @@
       tx.textContent = val>=1000 ? "$"+Math.round(val/1000)+"k" : "$"+Math.round(val);
       svg.appendChild(tx);
     }
-    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#C6D0DE","stroke-width":1}));
   }
   function draw(svgId,vals,lo,hi,k,color,soft,overlay){
     var svg=document.getElementById(svgId);
@@ -234,7 +234,7 @@
         var py=H-(dens/peak)*(H-14);
         pts.push(px.toFixed(1)+","+py.toFixed(1));
       }
-      svg.appendChild(el("polyline",{points:pts.join(" "),fill:"none",stroke:"#1F4F4C","stroke-width":2,"stroke-linejoin":"round",opacity:.75,"stroke-dasharray":"5 4"}));
+      svg.appendChild(el("polyline",{points:pts.join(" "),fill:"none",stroke:"#0F2E5C","stroke-width":2,"stroke-linejoin":"round",opacity:.75,"stroke-dasharray":"5 4"}));
     }
     axis(svg,lo,hi,W,H,PL,PR);
   }
@@ -249,7 +249,7 @@
     box.style.display="none"; svg.style.display="block";
     var W=860,H=96,PL=8,PR=8, span=W-PL-PR;
     function X(v){ return PL+((v-LO)/(HI-LO))*span; }
-    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#C6D0DE","stroke-width":1}));
     // jitter dots so overlaps stay visible
     var jr=mulberry32(lastSample.length*7919+Math.round(lastSample[0]));
     for(var i=0;i<lastSample.length;i++){
@@ -301,7 +301,7 @@
   /* ---------- the guided narration ---------- */
   var STEPS=[
     ["Start here","Below is our whole population — the medical charges billed to 5,000 people over one year. Look at its shape for a moment before you touch anything. It is lopsided: most people cost very little, and a long tail of people cost a great deal. <strong>It is nothing like a bell curve.</strong> Remember that, because it is the entire point of what follows."],
-    ["You just took one sample","You picked "+"<span id='nz'></span>"+" people at random. Each dot is one of them, and the teal line is their average — a single number standing in for the whole group. That one number is now the first entry in the bottom chart. Draw a few more by hand and watch them land in different places. <strong>The average moves around, because who you happen to pick moves around.</strong>"],
+    ["You just took one sample","You picked "+"<span id='nz'></span>"+" people at random. Each dot is one of them, and the navy line is their average — a single number standing in for the whole group. That one number is now the first entry in the bottom chart. Draw a few more by hand and watch them land in different places. <strong>The average moves around, because who you happen to pick moves around.</strong>"],
     ["Keep collecting","You are building something. Each new average adds to the pile at the bottom. Press <em>Draw 500</em> and watch the shape fill in."],
     ["Now compare the two charts","The population at the top is still lopsided — that never changed. But look at the pile of averages at the bottom. It is <strong>symmetric, centered, and bell-shaped</strong>, and it is far narrower than the population it came from. You did not do anything to make that happen. It is simply what averages do.<br><br>This is the <strong>central limit theorem</strong>. The population does not have to be normal. The <em>sample means</em> come out normal anyway."],
     ["Change the sample size","Now switch <em>n</em> between 2 and 100 and rebuild the pile each time. Two things happen, and only one of them is obvious.<br><br>The pile gets <strong>narrower</strong> as n grows — bigger samples give more reliable averages. And the pile gets <strong>more bell-shaped</strong> as n grows, even from this very lopsided population.<br><br>Then check the bottom two rows of the numbers panel. The spread you measured should be closing in on <em>σ&#8202;/&#8202;√n</em>, the value that was predicted before you drew a single sample."]

@@ -6,9 +6,9 @@
 <title>P-Values and Significance — QMB 6315</title>
 <style>
   :root{
-    --bg:#FDFBF7; --card:#FFFFFF; --ink:#2B2622; --muted:#6E655C; --faint:#9A9088;
-    --rule:#E8DFD2; --pop:#C4703A; --pop-soft:#EFD9C7; --mean:#2F6F6B; --mean-soft:#CFE2E0;
-    --flag:#B8433A; --note:#FBF3E7; --band:#EFEAE1;
+    --bg:#F7F9FB; --card:#FFFFFF; --ink:#081E3F; --muted:#55637A; --faint:#657385;
+    --rule:#DCE3EC; --pop:#D1A644; --pop-text:#7A5F1C; --pop-soft:#F0E2C0; --mean:#1B4079; --mean-soft:#CBD8EA;
+    --flag:#CC0066; --note:#FDF7E8; --band:#E8EDF3;
     --shadow:0 1px 3px rgba(43,38,34,.07), 0 6px 20px rgba(43,38,34,.05);
   }
   *{box-sizing:border-box}
@@ -28,13 +28,13 @@
   .axis-lbl{font:11.5px ui-sans-serif,-apple-system,"Segoe UI",sans-serif;fill:var(--faint)}
   .tick{stroke:var(--rule);stroke-width:1}
 
-  .note{background:var(--note);border:1px solid #EFDFC4;border-left:3px solid var(--pop);
+  .note{background:var(--note);border:1px solid #EFDCA8;border-left:3px solid var(--pop);
         border-radius:8px;padding:15px 18px;margin-bottom:18px}
   .note b{display:block;font-family:ui-sans-serif,-apple-system,"Segoe UI",sans-serif;
-        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop);margin-bottom:5px;font-weight:700}
+        font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pop-text);margin-bottom:5px;font-weight:700}
   .note p{margin:0;font-size:16px}
 
-  .caution{background:#FDF4F3;border:1px solid #F0D6D3;border-left:3px solid var(--flag)}
+  .caution{background:#FDF2F7;border:1px solid #F2CADE;border-left:3px solid var(--flag)}
   .caution h2{color:var(--flag)}
   .caution p{margin:0 0 11px;font-size:15.5px}
   .caution p:last-child{margin-bottom:0}
@@ -55,8 +55,8 @@
     border:1px solid var(--rule); border-radius:7px; padding:9px 14px; cursor:pointer;
     transition:background .13s,border-color .13s,color .13s;
   }
-  button:hover{background:#FAF6EF;border-color:#D8CBB8}
-  button:active{background:#F3EBDE}
+  button:hover{background:#F3F6FA;border-color:#B9C6D8}
+  button:active{background:#E9EFF6}
   button[aria-pressed="true"]{background:var(--mean);border-color:var(--mean);color:#fff}
   .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14.5px;margin-top:14px;cursor:pointer;user-select:none}
   .zoom input{width:16px;height:16px;accent-color:var(--mean);cursor:pointer}
@@ -74,20 +74,20 @@
   tr:last-child td{border-bottom:0}
   td.k{color:var(--muted)}
   td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-  td.v.pop{color:var(--pop)} td.v.mean{color:var(--mean)} td.v.flag{color:var(--flag)}
+  td.v.pop{color:var(--pop-text)} td.v.mean{color:var(--mean)} td.v.flag{color:var(--flag)}
   .split{display:flex;gap:18px;flex-wrap:wrap}
   .split>div{flex:1 1 300px}
   .hint{font-size:13.5px;color:var(--faint);margin:10px 0 0;font-style:italic}
 
   /* the decision */
   .pline{text-align:center;font-size:20px;padding:2px 0 0;font-variant-numeric:tabular-nums}
-  .pline .big{font-size:27px;font-weight:700;color:var(--pop)}
+  .pline .big{font-size:27px;font-weight:700;color:var(--pop-text)}
   .decision{margin-top:15px;padding:15px;border-radius:9px;text-align:center;font-size:20px;font-weight:700;letter-spacing:.01em}
-  .decision.rej{background:#F1F7F5;color:#25604F;border:1px solid #CFE2DA}
-  .decision.no{background:#F7F4EF;color:#6B5F4F;border:1px solid #E4DACA}
+  .decision.rej{background:#EFF4FA;color:#1B4079;border:1px solid #CBD8EA}
+  .decision.no{background:#F3F6FA;color:#55637A;border:1px solid #DCE3EC}
   .decision small{display:block;font-size:14.5px;font-weight:400;margin-top:6px;letter-spacing:0}
   .edge{margin-top:12px;padding:12px 15px;border-radius:8px;font-size:15.5px;text-align:center;
-        background:#FDF6EE;color:#8A5326;border:1px solid #EBD9C2}
+        background:#FDF7E8;color:#7A5F1C;border:1px solid #EFDCA8}
 
   .thresh{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
   .thresh>div{flex:1 1 240px;border:1px solid var(--rule);border-radius:9px;padding:14px 16px;text-align:center}
@@ -110,7 +110,7 @@
 
   <div class="note" id="note">
     <b>Start here</b>
-    <p id="noteTxt">The same blood-pressure drug from last week. This time you do not know whether it works, and you have to decide. Start by assuming it does <strong>nothing</strong> — that is the null hypothesis. The teal curve below shows the trial results pure chance would hand you if that were true: centered on zero, because a useless drug produces no average change. Your trial's result is the orange line. The question is whether chance alone plausibly explains it.</p>
+    <p id="noteTxt">The same blood-pressure drug from last week. This time you do not know whether it works, and you have to decide. Start by assuming it does <strong>nothing</strong> — that is the null hypothesis. The navy curve below shows the trial results pure chance would hand you if that were true: centered on zero, because a useless drug produces no average change. Your trial's result is the navy line. The question is whether chance alone plausibly explains it.</p>
   </div>
 
   <!-- HYPOTHESES -->
@@ -133,7 +133,7 @@
   <!-- CHART -->
   <div class="card">
     <h2>What chance alone would produce</h2>
-    <p class="cap">If the drug did nothing, this is the spread of results a trial of this size would return. The shaded orange area is the <em>p</em>-value: every result at least as extreme as yours.</p>
+    <p class="cap">If the drug did nothing, this is the spread of results a trial of this size would return. The shaded gold area is the <em>p</em>-value: every result at least as extreme as yours.</p>
     <svg id="chart" viewBox="0 0 860 250" role="img" aria-label="Null distribution with the observed result and the p-value tails shaded"></svg>
     <div class="legend">
       <span><i style="background:var(--mean);opacity:.85"></i>Results chance would produce if <em>H</em><sub>0</sub> is true</span>
@@ -392,7 +392,7 @@
         points:(mx+dir*15)+","+(H/2)+" "+(mx+dir*4)+","+(H/2-7)+" "+(mx+dir*4)+","+(H/2+7),
         fill:"var(--pop)"}));
     }
-    var lt=el("text",{y:9,class:"axis-lbl",fill:"var(--pop)","font-weight":"700","font-size":"13.5"});
+    var lt=el("text",{y:9,class:"axis-lbl",fill:"var(--pop-text)","font-weight":"700","font-size":"13.5"});
     if(off){
       // a long label at the edge — anchor it inward so it cannot run off the chart
       lt.setAttribute("x", dir>0 ? W-PR : PL);
@@ -406,7 +406,7 @@
     svg.appendChild(lt);
 
     // axis
-    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#DCD2C4","stroke-width":1}));
+    svg.appendChild(el("line",{x1:PL,y1:H,x2:W-PR,y2:H,stroke:"#C6D0DE","stroke-width":1}));
     var stp=niceStep(hi-lo,6), first=Math.ceil(lo/stp)*stp;
     var dp=Math.max(0,-Math.floor(Math.log10(stp)+1e-9));
     for(var j2=0;;j2++){
@@ -488,8 +488,8 @@
 
   /* ---------- narration ---------- */
   var STEPS_TXT=[
-    ["Start here","The same blood-pressure drug from last week. This time you do not know whether it works, and you have to decide. Start by assuming it does <strong>nothing</strong> — that is the null hypothesis. The teal curve below shows the trial results pure chance would hand you if that were true: centered on zero, because a useless drug produces no average change. Your trial's result is the orange line. The question is whether chance alone plausibly explains it."],
-    ["What the p-value is","The shaded orange area is your <em>p</em>-value. It answers exactly one question: <strong>if the drug does nothing, how often would chance alone produce a result at least this far from zero?</strong><br><br>Small <em>p</em> means your result sits somewhere chance rarely reaches — so “the drug does nothing” is getting hard to believe. Large <em>p</em> means chance produces results like yours all the time, and you have learned nothing.<br><br>Notice what the <em>p</em>-value is <em>not</em>: it is not the probability the drug works, and it is not the probability you are wrong. It is a statement about what chance does, computed in a world where the drug is useless."],
+    ["Start here","The same blood-pressure drug from last week. This time you do not know whether it works, and you have to decide. Start by assuming it does <strong>nothing</strong> — that is the null hypothesis. The navy curve below shows the trial results pure chance would hand you if that were true: centered on zero, because a useless drug produces no average change. Your trial's result is the navy line. The question is whether chance alone plausibly explains it."],
+    ["What the p-value is","The shaded gold area is your <em>p</em>-value. It answers exactly one question: <strong>if the drug does nothing, how often would chance alone produce a result at least this far from zero?</strong><br><br>Small <em>p</em> means your result sits somewhere chance rarely reaches — so “the drug does nothing” is getting hard to believe. Large <em>p</em> means chance produces results like yours all the time, and you have learned nothing.<br><br>Notice what the <em>p</em>-value is <em>not</em>: it is not the probability the drug works, and it is not the probability you are wrong. It is a statement about what chance does, computed in a world where the drug is useless."],
     ["The line you drew in advance","α is your threshold, chosen before the data existed. If <em>p</em> falls below it you reject <em>H</em><sub>0</sub>.<br><br>Now walk the slider slowly across that boundary. The decision flips from one word to its opposite while the evidence barely moves at all. <strong>Nature does not have a cliff at 0.05.</strong> We put one there because decisions have to get made, and then people started treating one side of it as truth and the other as nothing.<br><br>Now change the sample size — that is where this gets serious."],
     ["Significance can be bought","Watch the dashed line as you raise <em>n</em>. At 10 patients nothing counts as significant unless the drop is larger than most blood-pressure drugs actually achieve. At 2,000 patients, a fraction of a millimetre clears the bar. The panel below tells you the exact figure for whatever settings you are on.<br><br>The drug did not change. Your <em>ability to detect trivia</em> changed. Set <em>n</em> to 2,000 and slide your result down to about 1 mmHg: you will get a triumphant <em>p</em> below 0.001 for an effect no patient could feel.<br><br><strong>This is the single most exploited fact in applied statistics.</strong> A large enough study can make anything significant, which is why “statistically significant” on its own is not a finding. Always ask the second question: <em>how big is it, and does that size matter?</em>"]
   ];
